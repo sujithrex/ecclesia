@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Fellowship - {{ church.church_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=church.pastorate.pk %}">{{ church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=church.pk %}">{{ church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:fellowship_list' church_id=church.pk %}">Fellowships</a></li>
+<li class="breadcrumb-item active">Add Fellowship</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Add New Fellowship</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="area" class="form-label">Area</label>
+                            <select class="form-select" id="area" name="area" required>
+                                <option value="">Select an area</option>
+                                {% for area in areas %}
+                                <option value="{{ area.pk }}">{{ area.area_name }} ({{ area.area_id }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fellowship_name" class="form-label">Fellowship Name</label>
+                            <input type="text" class="form-control" id="fellowship_name" name="fellowship_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fellowship_id" class="form-label">Fellowship ID</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light" id="area-prefix">AREA-</span>
+                                <input type="text" class="form-control" id="fellowship_id" name="fellowship_id" required>
+                            </div>
+                            <div class="form-text">A unique identifier for this fellowship (e.g., F01, F02)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3"></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:fellowship_list' church_id=church.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Fellowship
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('area').addEventListener('change', function() {
+    const areaSelect = this;
+    const selectedOption = areaSelect.options[areaSelect.selectedIndex];
+    const areaId = selectedOption.text.match(/\((.*?)\)/)[1];
+    document.getElementById('area-prefix').textContent = areaId + '-';
+});
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ family.family_head }}'s Family - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=family.area.church.pastorate.pk %}">{{ family.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=family.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=family.area.church.pk %}">{{ family.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=family.area.church.pk %}">Areas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_detail' pk=family.area.pk %}">{{ family.area.area_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_list' area_id=family.area.pk %}">Families</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_detail' pk=family.pk %}">{{ family.family_head }}'s Family</a></li>
+<li class="breadcrumb-item active">Delete</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title text-danger mb-4">Delete Family</h3>
+                    <p class="lead">Are you sure you want to delete the family of "{{ family.family_head }}"?</p>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        This action cannot be undone. All data associated with this family, including all family members, will be permanently deleted.
+                    </div>
+
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Family Details</h5>
+                            <p class="card-text">
+                                <strong>Family Head:</strong> {{ family.respect.name }} {{ family.initial }} {{ family.family_head }}<br>
+                                <strong>Family ID:</strong> {{ family.family_id }}<br>
+                                <strong>Area:</strong> {{ family.area.area_name }}<br>
+                                <strong>Fellowship:</strong> {{ family.fellowship.fellowship_name }}<br>
+                                <strong>Mobile:</strong> {{ family.mobile }}<br>
+                                <strong>Email:</strong> {{ family.email|default:"-" }}<br>
+                                <strong>Members:</strong> {{ family.member_set.count }}<br>
+                                <strong>Created:</strong> {{ family.created_at|date:"F j, Y" }}<br>
+                                <strong>Last Updated:</strong> {{ family.updated_at|date:"F j, Y" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:family_detail' pk=family.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Delete Family
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

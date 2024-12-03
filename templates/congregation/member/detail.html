@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ member.name }} - Member Details - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=member.family.area.church.pastorate.pk %}">{{ member.family.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=member.family.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=member.family.area.church.pk %}">{{ member.family.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=member.family.area.church.pk %}">Areas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_detail' pk=member.family.area.pk %}">{{ member.family.area.area_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_list' area_id=member.family.area.pk %}">Families</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_detail' pk=member.family.pk %}">{{ member.family.family_head }}'s Family</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:member_list' family_id=member.family.pk %}">Members</a></li>
+<li class="breadcrumb-item active">{{ member.name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Member Details</h2>
+        <div class="btn-group">
+            <a href="{% url 'congregation:member_edit' pk=member.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit me-2"></i>Edit Member
+            </a>
+            <a href="{% url 'congregation:member_delete' pk=member.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash me-2"></i>Delete Member
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if member.image %}
+                    <img src="{{ member.image.url }}" alt="{{ member.name }}" class="rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                    {% else %}
+                    <i class="fas fa-user-circle mb-3" style="font-size: 150px; color: #ccc;"></i>
+                    {% endif %}
+                    <h3 class="card-title">{{ member.respect.name }} {{ member.initial }} {{ member.name }}</h3>
+                    <p class="text-muted mb-2">{{ member.relation.name }}</p>
+                    <p class="mb-0">
+                        <span class="badge bg-secondary">{{ member.member_id }}</span>
+                        {% if member.death %}
+                        <span class="badge bg-danger ms-2">Deceased</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Personal Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Sex</label>
+                            <p class="mb-0">
+                                {% if member.sex == 'M' %}Male
+                                {% elif member.sex == 'F' %}Female
+                                {% else %}Other{% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Age</label>
+                            <p class="mb-0">{{ member.age }} years</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Date of Birth</label>
+                            <p class="mb-0">{{ member.dob|date:"M d, Y" }}</p>
+                        </div>
+                        {% if member.dom %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Date of Marriage</label>
+                            <p class="mb-0">{{ member.dom|date:"M d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                        {% if member.aadhar_number %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Aadhar Number</label>
+                            <p class="mb-0">{{ member.aadhar_number }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Professional Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if member.working %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Working</label>
+                            <p class="mb-0">{{ member.working }}</p>
+                        </div>
+                        {% endif %}
+                        {% if member.working_place %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Working Place</label>
+                            <p class="mb-0">{{ member.working_place }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Church Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% if member.baptised %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Baptism Date</label>
+                            <p class="mb-0">{{ member.date_of_bap|date:"M d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                        {% if member.conformed %}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-muted">Confirmation Date</label>
+                            <p class="mb-0">{{ member.date_of_conf|date:"M d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                        {% if member.death %}
+                        <div class="col-md-6">
+                            <label class="form-label text-muted">Date of Death</label>
+                            <p class="mb-0">{{ member.date_of_death|date:"M d, Y" }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

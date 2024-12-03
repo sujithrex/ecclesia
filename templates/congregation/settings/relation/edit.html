@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ relation.name }} - Settings - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item">Settings</li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:relation_list' %}">Relations</a></li>
+<li class="breadcrumb-item active">Edit</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Edit Relation</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Relation Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ relation.name }}" required>
+                            <div class="form-text">Enter the relation (e.g., Father, Mother, Son, Daughter, etc.)</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:relation_list' %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

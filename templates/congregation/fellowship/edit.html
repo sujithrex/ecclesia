@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ fellowship.fellowship_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=fellowship.area.church.pastorate.pk %}">{{ fellowship.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=fellowship.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=fellowship.area.church.pk %}">{{ fellowship.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:fellowship_list' church_id=fellowship.area.church.pk %}">Fellowships</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:fellowship_detail' pk=fellowship.pk %}">{{ fellowship.fellowship_name }}</a></li>
+<li class="breadcrumb-item active">Edit</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Edit Fellowship</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="fellowship_name" class="form-label">Fellowship Name</label>
+                            <input type="text" class="form-control" id="fellowship_name" name="fellowship_name" value="{{ fellowship.fellowship_name }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="fellowship_id" class="form-label">Fellowship ID</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">{{ fellowship.area.area_id }}-</span>
+                                <input type="text" class="form-control" id="fellowship_id" name="fellowship_id" value="{{ fellowship.fellowship_id|cut:fellowship.area.area_id|cut:'-' }}" required>
+                            </div>
+                            <div class="form-text">A unique identifier for this fellowship (e.g., F01, F02)</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3">{{ fellowship.address }}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:fellowship_detail' pk=fellowship.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

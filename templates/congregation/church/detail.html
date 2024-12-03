@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ church.church_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=church.pastorate.pk %}">{{ church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item active">{{ church.church_name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ church.church_name }}</h2>
+            <div class="text-muted">
+                <span class="badge bg-secondary me-2">{{ church.short_name }}</span>
+                <i class="fas fa-map-marker-alt me-2"></i>{{ church.abode }}
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'congregation:church_edit' pk=church.pk %}" class="btn btn-light">
+                <i class="fas fa-edit me-2"></i>Edit
+            </a>
+            <a href="{% url 'congregation:church_delete' pk=church.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash me-2"></i>Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Search Section -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Quick Search</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Family Search -->
+                        <div class="col-md-6">
+                            <form action="{% url 'congregation:family_search' %}" method="get" class="mb-3">
+                                <input type="hidden" name="church" value="{{ church.pk }}">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="q" 
+                                        placeholder="Search families by ID, head name, mobile..."
+                                        value="{{ request.GET.q }}">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search me-2"></i>Search Family
+                                    </button>
+                                </div>
+                                <div class="form-text">Search by family ID, head name, or mobile number</div>
+                            </form>
+                        </div>
+                        <!-- Member Search -->
+                        <div class="col-md-6">
+                            <form action="{% url 'congregation:member_search' %}" method="get" class="mb-3">
+                                <input type="hidden" name="church" value="{{ church.pk }}">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="q" 
+                                        placeholder="Search members by ID, name, mobile..."
+                                        value="{{ request.GET.q }}">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search me-2"></i>Search Member
+                                    </button>
+                                </div>
+                                <div class="form-text">Search by member ID, name, or any other details</div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Areas Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-layer-group me-2 text-primary"></i>Areas
+                    </h5>
+                    <a href="{% url 'congregation:area_add' church_id=church.pk %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-2"></i>Add Area
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if areas %}
+                    <div class="list-group list-group-flush">
+                        {% for area in areas %}
+                        <a href="{% url 'congregation:area_detail' pk=area.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">{{ area.area_name }}</h6>
+                                <small class="text-muted">{{ area.area_id }}</small>
+                            </div>
+                            <span class="badge bg-primary rounded-pill">{{ area.fellowship_set.count }} Fellowships</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-layer-group text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5>No Areas Yet</h5>
+                        <p class="text-muted mb-4">Start by adding an area to this church.</p>
+                        <a href="{% url 'congregation:area_add' church_id=church.pk %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add First Area
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Fellowships Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2 text-primary"></i>Fellowships
+                    </h5>
+                    <a href="{% url 'congregation:fellowship_add' church_id=church.pk %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-2"></i>Add Fellowship
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if fellowships %}
+                    <div class="list-group list-group-flush">
+                        {% for fellowship in fellowships %}
+                        <a href="{% url 'congregation:fellowship_detail' pk=fellowship.pk %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ fellowship.fellowship_name }}</h6>
+                                <small class="text-muted">{{ fellowship.fellowship_id }}</small>
+                            </div>
+                            <p class="mb-1 text-muted small">Area: {{ fellowship.area.area_name }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-users text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5>No Fellowships Yet</h5>
+                        <p class="text-muted mb-4">Start by adding a fellowship to this church.</p>
+                        <a href="{% url 'congregation:fellowship_add' church_id=church.pk %}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add First Fellowship
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Today's Celebrations</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Birthdays -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">
+                            <i class="fas fa-birthday-cake text-primary me-2"></i>Birthdays
+                        </h6>
+                        {% if birthdays %}
+                        <ul class="list-unstyled mb-0">
+                            {% for member in birthdays %}
+                            <li class="mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        {% if member.image %}
+                                        <img src="{{ member.image.url }}" alt="{{ member.name }}" 
+                                            class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                                            style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-secondary"></i>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">
+                                            <a href="{% url 'congregation:family_detail' pk=member.family.pk %}" class="text-decoration-none">
+                                                {{ member.respect.name }} {{ member.initial }} {{ member.name }}
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">{{ member.age }} years • {{ member.family.area.area_name }}</small>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted mb-0">No birthdays today</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Wedding Anniversaries -->
+                    <div class="col-md-6">
+                        <h6 class="mb-3">
+                            <i class="fas fa-rings-wedding text-primary me-2"></i>Wedding Anniversaries
+                        </h6>
+                        {% if anniversaries %}
+                        <ul class="list-unstyled mb-0">
+                            {% for member in anniversaries %}
+                            <li class="mb-2">
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        {% if member.image %}
+                                        <img src="{{ member.image.url }}" alt="{{ member.name }}" 
+                                            class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                                            style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user text-secondary"></i>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-medium">
+                                            <a href="{% url 'congregation:family_detail' pk=member.family.pk %}" class="text-decoration-none">
+                                                {{ member.respect.name }} {{ member.initial }} {{ member.name }} & 
+                                                {{ member.spouse.respect.name }} {{ member.spouse.initial }} {{ member.spouse.name }}
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">
+                                            {% if member.marriage_years %}
+                                                {{ member.marriage_years }} years • {{ member.family.area.area_name }}
+                                            {% else %}
+                                                {{ member.family.area.area_name }}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% else %}
+                        <p class="text-muted mb-0">No anniversaries today</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Church Information -->
+    <div class="card mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Church Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="ps-0" style="width: 150px;">Church Name:</th>
+                            <td>{{ church.church_name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Short Name:</th>
+                            <td>{{ church.short_name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Location:</th>
+                            <td>{{ church.abode }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Pastorate:</th>
+                            <td>{{ church.pastorate.pastorate_name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Created:</th>
+                            <td>{{ church.created_at|date:"F d, Y" }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Last Updated:</th>
+                            <td>{{ church.updated_at|date:"F d, Y" }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">Quick Stats</h6>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <div class="p-3 bg-white rounded shadow-sm">
+                                        <div class="text-muted small">Areas</div>
+                                        <div class="h3 mb-0">{{ areas|length }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-white rounded shadow-sm">
+                                        <div class="text-muted small">Fellowships</div>
+                                        <div class="h3 mb-0">{{ fellowships|length }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-white rounded shadow-sm">
+                                        <div class="text-muted small">Families</div>
+                                        <div class="h3 mb-0">{{ families|length|default:"0" }}</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-3 bg-white rounded shadow-sm">
+                                        <div class="text-muted small">Members</div>
+                                        <div class="h3 mb-0">{{ members|length|default:"0" }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ fellowship.fellowship_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=fellowship.area.church.pastorate.pk %}">{{ fellowship.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=fellowship.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=fellowship.area.church.pk %}">{{ fellowship.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:fellowship_list' church_id=fellowship.area.church.pk %}">Fellowships</a></li>
+<li class="breadcrumb-item active">{{ fellowship.fellowship_name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="card-title mb-0">{{ fellowship.fellowship_name }}</h3>
+                        <div class="btn-group">
+                            <a href="{% url 'congregation:fellowship_edit' pk=fellowship.pk %}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </a>
+                            <a href="{% url 'congregation:fellowship_delete' pk=fellowship.pk %}" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Fellowship ID:</strong> {{ fellowship.fellowship_id }}</p>
+                            <p><strong>Area:</strong> {{ fellowship.area.area_name }}</p>
+                            {% if fellowship.address %}
+                            <p><strong>Address:</strong> {{ fellowship.address }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Created:</strong> {{ fellowship.created_at|date:"F j, Y, g:i a" }}</p>
+                            <p><strong>Last Updated:</strong> {{ fellowship.updated_at|date:"F j, Y, g:i a" }}</p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div class="mt-4">
+                        <h4>Fellowship Information</h4>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Church Details</h5>
+                                        <p class="card-text">
+                                            <strong>Church:</strong> {{ fellowship.area.church.church_name }}<br>
+                                            <strong>Pastorate:</strong> {{ fellowship.area.church.pastorate.pastorate_name }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Area Details</h5>
+                                        <p class="card-text">
+                                            <strong>Area:</strong> {{ fellowship.area.area_name }}<br>
+                                            <strong>Area ID:</strong> {{ fellowship.area.area_id }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Stats -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted small">Families</div>
+                                <div class="h3 mb-0">{{ families|length }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted small">Members</div>
+                                <div class="h3 mb-0">{{ members|length }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Celebrations -->
+        <div class="col-md-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Today's Celebrations</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Birthdays -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3">
+                                <i class="fas fa-birthday-cake text-primary me-2"></i>Birthdays
+                            </h6>
+                            {% if birthdays %}
+                            <ul class="list-unstyled mb-0">
+                                {% for member in birthdays %}
+                                <li class="mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <a href="{% url 'congregation:family_detail' pk=member.family.pk %}" class="text-decoration-none">
+                                                {{ member.respect.name }} {{ member.name }}
+                                            </a>
+                                            <small class="text-muted d-block">{{ member.family.area.area_name }}</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted mb-0">No birthdays today</p>
+                            {% endif %}
+                        </div>
+
+                        <!-- Wedding Anniversaries -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3">
+                                <i class="fas fa-rings-wedding text-primary me-2"></i>Wedding Anniversaries
+                            </h6>
+                            {% if anniversaries %}
+                            <ul class="list-unstyled mb-0">
+                                {% for member in anniversaries %}
+                                <li class="mb-2">
+                                    <div class="d-flex align-items-center">
+                                        <div>
+                                            <a href="{% url 'congregation:family_detail' pk=member.family.pk %}" class="text-decoration-none">
+                                                {{ member.respect.name }} {{ member.name }} & 
+                                                {{ member.spouse.respect.name }} {{ member.spouse.name }}
+                                            </a>
+                                            <small class="text-muted d-block">{{ member.family.area.area_name }}</small>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted mb-0">No anniversaries today</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Families Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-home me-2 text-primary"></i>Families
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Search Family -->
+                    <div class="mb-4">
+                        <form action="{% url 'congregation:family_search' %}" method="get" class="row g-2">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="q" 
+                                        placeholder="Search families by ID, head name, mobile..."
+                                        value="{{ request.GET.q }}">
+                                    <input type="hidden" name="fellowship" value="{{ fellowship.pk }}">
+                                    <button class="btn btn-primary" type="submit">
+                                        <i class="fas fa-search me-2"></i>Search Family
+                                    </button>
+                                </div>
+                                <div class="form-text">Search by family ID, head name, or mobile number</div>
+                            </div>
+                        </form>
+                    </div>
+
+                    {% if fellowship.family_set.exists %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Family ID</th>
+                                    <th>Family Head</th>
+                                    <th>Contact</th>
+                                    <th>Area</th>
+                                    <th>Members</th>
+                                    <th>Updated</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for family in fellowship.family_set.all %}
+                                <tr>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ family.family_id }}</span>
+                                    </td>
+                                    <td>
+                                        {{ family.respect.name }} {{ family.initial }} {{ family.family_head }}
+                                    </td>
+                                    <td>
+                                        <div>{{ family.mobile }}</div>
+                                        <small class="text-muted">{{ family.email }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            {{ family.area.area_name }}
+                                        </span>
+                                    </td>
+                                    <td>{{ family.member_set.count }}</td>
+                                    <td>
+                                        <small class="text-muted">{{ family.updated_at|date:"M d, Y" }}</small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'congregation:family_detail' pk=family.pk %}" class="btn btn-sm btn-light" title="View">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'congregation:family_edit' pk=family.pk %}" class="btn btn-sm btn-light" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'congregation:family_delete' pk=family.pk %}" class="btn btn-sm btn-light text-danger" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-home text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                        <h5>No Families Yet</h5>
+                        <p class="text-muted mb-4">No families are assigned to this fellowship.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

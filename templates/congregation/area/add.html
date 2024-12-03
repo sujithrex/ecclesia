@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Area - {{ church.church_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=church.pastorate.pk %}">{{ church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=church.pk %}">{{ church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=church.pk %}">Areas</a></li>
+<li class="breadcrumb-item active">Add Area</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Add New Area</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="area_name" class="form-label">Area Name</label>
+                            <input type="text" class="form-control" id="area_name" name="area_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="area_id" class="form-label">Area ID</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">{{ church.short_name }}-</span>
+                                <input type="text" class="form-control" id="area_id" name="area_id" required>
+                            </div>
+                            <div class="form-text">A unique identifier for this area (e.g., A01, A02)</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:area_list' church_id=church.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Area
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

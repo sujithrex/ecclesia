@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ family.family_head }}'s Family - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=family.area.church.pastorate.pk %}">{{ family.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=family.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=family.area.church.pk %}">{{ family.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=family.area.church.pk %}">Areas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_detail' pk=family.area.pk %}">{{ family.area.area_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_list' area_id=family.area.pk %}">Families</a></li>
+<li class="breadcrumb-item active">{{ family.family_head }}'s Family</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ family.family_head }}'s Family</h2>
+            <div class="text-muted">
+                <span class="badge bg-secondary me-2">{{ family.family_id }}</span>
+                <i class="fas fa-users me-2"></i>{{ family.member_set.count }} Members
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'congregation:family_edit' pk=family.pk %}" class="btn btn-light">
+                <i class="fas fa-edit me-2"></i>Edit
+            </a>
+            <a href="{% url 'congregation:family_delete' pk=family.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash me-2"></i>Delete
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Family Information -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Family Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="ps-0" style="width: 150px;">Family Head:</th>
+                                    <td>{{ family.respect.name }} {{ family.initial }} {{ family.family_head }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Family ID:</th>
+                                    <td>{{ family.family_id }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Mobile:</th>
+                                    <td>{{ family.mobile }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Email:</th>
+                                    <td>{{ family.email|default:"-" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th class="ps-0" style="width: 150px;">Area:</th>
+                                    <td>{{ family.area.area_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Fellowship:</th>
+                                    <td>{{ family.fellowship.fellowship_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Created:</th>
+                                    <td>{{ family.created_at|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th class="ps-0">Last Updated:</th>
+                                    <td>{{ family.updated_at|date:"F d, Y" }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h6 class="mb-3">Address</h6>
+                        <p class="mb-4">{{ family.address }}</p>
+
+                        {% if family.prayer_points %}
+                        <h6 class="mb-3">Prayer Points</h6>
+                        <p class="mb-0">{{ family.prayer_points }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted small">Total Members</div>
+                                <div class="h3 mb-0">{{ family.member_set.count }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted small">Baptised</div>
+                                <div class="h3 mb-0">{{ baptised_count }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted small">Confirmed</div>
+                                <div class="h3 mb-0">{{ confirmed_count }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded">
+                                <div class="text-muted small">Active</div>
+                                <div class="h3 mb-0">{{ active_count }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Members Section -->
+    <div class="card mt-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <div>
+                <h5 class="mb-0">Family Members</h5>
+                <small class="text-muted">Total: {{ family.member_set.count }}</small>
+            </div>
+            <a href="{% url 'congregation:member_add' family_id=family.pk %}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Add Member
+            </a>
+        </div>
+        <div class="card-body p-0">
+            {% if members %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4" style="width: 100px;">ID</th>
+                            <th style="width: 60px;">Photo</th>
+                            <th>Name</th>
+                            <th>Relation</th>
+                            <th style="width: 100px;">Age</th>
+                            <th style="width: 120px;">Status</th>
+                            <th style="width: 120px;" class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in members %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge bg-light text-dark border">{{ member.member_id }}</span>
+                            </td>
+                            <td>
+                                {% if member.image %}
+                                    <img src="{{ member.image.url }}" alt="{{ member.name }}" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user text-secondary"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <div class="fw-medium">{{ member.respect.name }} {{ member.initial }} {{ member.name }}</div>
+                                    {% if member.death %}
+                                    <span class="badge bg-danger-subtle text-danger mt-1" style="width: fit-content;">Deceased</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark">{{ member.relation.name }}</span>
+                            </td>
+                            <td>{{ member.age }} years</td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    {% if member.baptised %}
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="fas fa-water me-1"></i>Baptised
+                                    </span>
+                                    {% endif %}
+                                    {% if member.conformed %}
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        <i class="fas fa-check me-1"></i>Confirmed
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'congregation:member_detail' pk=member.pk %}" class="btn btn-sm btn-light" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:member_edit' pk=member.pk %}" class="btn btn-sm btn-light" title="Edit Member">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:member_delete' pk=member.pk %}" class="btn btn-sm btn-light text-danger" title="Delete Member">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-users text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="text-muted mb-2">No Members Yet</h5>
+                <p class="text-muted mb-4">Start by adding family members to keep track of everyone.</p>
+                <a href="{% url 'congregation:member_add' family_id=family.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add First Member
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

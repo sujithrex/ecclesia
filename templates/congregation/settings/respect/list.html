@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Respect Titles - Settings - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item">Settings</li>
+<li class="breadcrumb-item active">Respect Titles</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Respect Titles</h2>
+        <a href="{% url 'congregation:respect_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Respect Title
+        </a>
+    </div>
+
+    {% if respects %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Created</th>
+                            <th>Last Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for respect in respects %}
+                        <tr>
+                            <td>{{ respect.name }}</td>
+                            <td>{{ respect.created_at|date:"M d, Y" }}</td>
+                            <td>{{ respect.updated_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'congregation:respect_edit' pk=respect.pk %}" class="btn btn-sm btn-light" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:respect_delete' pk=respect.pk %}" class="btn btn-sm btn-light text-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No respect titles found. Click the "Add Respect Title" button to create one.
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

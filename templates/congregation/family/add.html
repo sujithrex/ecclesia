@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Family - {{ area.area_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=area.church.pastorate.pk %}">{{ area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=area.church.pk %}">{{ area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=area.church.pk %}">Areas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_detail' pk=area.pk %}">{{ area.area_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_list' area_id=area.pk %}">Families</a></li>
+<li class="breadcrumb-item active">Add Family</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Add New Family</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="family_id" class="form-label">Family ID</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light">{{ area.area_id }}-</span>
+                                        <input type="text" class="form-control" id="family_id" name="family_id" 
+                                            value="{{ suggested_family_id|slice:'-3:' }}" 
+                                            pattern="[0-9]{3}" 
+                                            maxlength="3" 
+                                            required>
+                                    </div>
+                                    <div class="form-text">Three-digit number (auto-generated but can be modified)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="fellowship" class="form-label">Fellowship</label>
+                                    <select class="form-select" id="fellowship" name="fellowship" required>
+                                        <option value="">Select a fellowship</option>
+                                        {% for fellowship in fellowships %}
+                                        <option value="{{ fellowship.pk }}">{{ fellowship.fellowship_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label for="respect" class="form-label">Respect</label>
+                                    <select class="form-select" id="respect" name="respect" required>
+                                        <option value="">Select</option>
+                                        {% for respect in respects %}
+                                        <option value="{{ respect.pk }}">{{ respect.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="mb-3">
+                                    <label for="initial" class="form-label">Initial</label>
+                                    <input type="text" class="form-control" id="initial" name="initial" maxlength="10">
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="family_head" class="form-label">Family Head Name</label>
+                                    <input type="text" class="form-control" id="family_head" name="family_head" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="head_sex" class="form-label">Sex</label>
+                                    <select class="form-select" id="head_sex" name="head_sex" required>
+                                        <option value="">Select sex</option>
+                                        <option value="M">Male</option>
+                                        <option value="F">Female</option>
+                                        <option value="O">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="head_dob" class="form-label">Date of Birth</label>
+                                    <input type="date" class="form-control" id="head_dob" name="head_dob">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="head_member_id" class="form-label">Member ID</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control text-end" 
+                                            id="member-id-prefix" 
+                                            value="{{ area.area_id }}" readonly 
+                                            style="background-color: #f8f9fa; max-width: 120px;">
+                                        <input type="text" class="form-control" 
+                                            id="family_number_display" readonly 
+                                            value="{{ suggested_family_id|slice:'8:' }}"
+                                            style="background-color: #f8f9fa;">
+                                        <input type="text" class="form-control" id="head_member_id" name="head_member_id" 
+                                            value="01" 
+                                            pattern="[0-9]{2}" 
+                                            maxlength="2">
+                                    </div>
+                                    <div class="form-text">Two-digit number (defaults to 01 for family head)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="mobile" class="form-label">Mobile Number</label>
+                                    <input type="tel" class="form-control" id="mobile" name="mobile" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="address" class="form-label">Address</label>
+                            <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="prayer_points" class="form-label">Prayer Points</label>
+                            <textarea class="form-control" id="prayer_points" name="prayer_points" rows="3"></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:family_list' area_id=area.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Add Family
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const familyIdInput = document.getElementById('family_id');
+    const familyNumberDisplay = document.getElementById('family_number_display');
+    
+    // Format the family ID input to always show three digits
+    familyIdInput.addEventListener('input', function() {
+        // Remove any non-digit characters
+        this.value = this.value.replace(/\D/g, '');
+        
+        // Update the member ID display
+        if (familyNumberDisplay) {
+            familyNumberDisplay.value = this.value.padStart(3, '0');
+        }
+    });
+
+    // Format on blur to ensure three digits
+    familyIdInput.addEventListener('blur', function() {
+        if (this.value) {
+            this.value = this.value.padStart(3, '0');
+            if (familyNumberDisplay) {
+                familyNumberDisplay.value = this.value;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+
+{% endblock %} 

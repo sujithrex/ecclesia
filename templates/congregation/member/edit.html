@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit {{ member.name }} - Member Details - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=member.family.area.church.pastorate.pk %}">{{ member.family.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=member.family.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=member.family.area.church.pk %}">{{ member.family.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=member.family.area.church.pk %}">Areas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_detail' pk=member.family.area.pk %}">{{ member.family.area.area_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_list' area_id=member.family.area.pk %}">Families</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_detail' pk=member.family.pk %}">{{ member.family.family_head }}'s Family</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:member_list' family_id=member.family.pk %}">Members</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:member_detail' pk=member.pk %}">{{ member.name }}</a></li>
+<li class="breadcrumb-item active">Edit</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Edit Member</h3>
+                    {% if messages %}
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="member_id" class="form-label">Member ID</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control bg-light" value="{{ member.family.family_id }}" readonly>
+                                    <input type="text" class="form-control" id="member_id" name="member_id" 
+                                        value="{{ member.member_id|slice:'-2:' }}" 
+                                        maxlength="2" 
+                                        pattern="[0-9]{2}" 
+                                        required>
+                                </div>
+                                <div class="form-text">Two-digit member number (e.g., 01, 02)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="aadhar_number" class="form-label">Aadhar Number</label>
+                                <input type="text" class="form-control" id="aadhar_number" name="aadhar_number" pattern="[0-9]{12}" maxlength="12" value="{{ member.aadhar_number }}">
+                                <div class="form-text">12-digit Aadhar number (optional)</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="respect" class="form-label">Respect Title</label>
+                                <select class="form-select" id="respect" name="respect" required>
+                                    <option value="">Select Title</option>
+                                    {% for respect in respects %}
+                                    <option value="{{ respect.pk }}" {% if respect.pk == member.respect.pk %}selected{% endif %}>{{ respect.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="initial" class="form-label">Initial</label>
+                                <input type="text" class="form-control" id="initial" name="initial" value="{{ member.initial }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ member.name }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="relation" class="form-label">Relation</label>
+                                <select class="form-select" id="relation" name="relation" required>
+                                    <option value="">Select Relation</option>
+                                    {% for relation in relations %}
+                                    <option value="{{ relation.pk }}" {% if relation.pk == member.relation.pk %}selected{% endif %}>{{ relation.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sex" class="form-label">Sex</label>
+                                <select class="form-select" id="sex" name="sex" required>
+                                    <option value="">Select Sex</option>
+                                    <option value="M" {% if member.sex == 'M' %}selected{% endif %}>Male</option>
+                                    <option value="F" {% if member.sex == 'F' %}selected{% endif %}>Female</option>
+                                    <option value="O" {% if member.sex == 'O' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="spouse" class="form-label">Spouse</label>
+                                <select class="form-select" id="spouse" name="spouse">
+                                    <option value="">Select Spouse (if married)</option>
+                                    {% for potential_spouse in family_members %}
+                                        {% if potential_spouse.pk != member.pk %}
+                                        <option value="{{ potential_spouse.pk }}" {% if member.spouse and member.spouse.pk == potential_spouse.pk %}selected{% endif %}>
+                                            {{ potential_spouse.respect.name }} {{ potential_spouse.initial }} {{ potential_spouse.name }}
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Select spouse if this member is married</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="dom" class="form-label">Date of Marriage</label>
+                                <input type="date" class="form-control" id="dom" name="dom" 
+                                    value="{% if member.dom %}{{ member.dom|date:'Y-m-d' }}{% endif %}">
+                                <div class="form-text">Will be synced with spouse's marriage date</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="dob" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob" name="dob" 
+                                    value="{% if member.dob %}{{ member.dob|date:'Y-m-d' }}{% endif %}" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="working" class="form-label">Working</label>
+                                <input type="text" class="form-control" id="working" name="working" value="{{ member.working }}">
+                                <div class="form-text">Occupation or profession</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="working_place" class="form-label">Working Place</label>
+                                <input type="text" class="form-control" id="working_place" name="working_place" value="{{ member.working_place }}">
+                                <div class="form-text">Place of work or business</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="baptised" name="baptised" {% if member.baptised %}checked{% endif %}>
+                                    <label class="form-check-label" for="baptised">Baptised</label>
+                                </div>
+                                <div class="mt-2" id="baptisedDateGroup" style="display: {% if member.baptised %}block{% else %}none{% endif %};">
+                                    <label for="date_of_bap" class="form-label">Date of Baptism</label>
+                                    <input type="date" class="form-control" id="date_of_bap" name="date_of_bap" value="{% if member.date_of_bap %}{{ member.date_of_bap|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="conformed" name="conformed" {% if member.conformed %}checked{% endif %}>
+                                    <label class="form-check-label" for="conformed">Confirmed</label>
+                                </div>
+                                <div class="mt-2" id="confirmedDateGroup" style="display: {% if member.conformed %}block{% else %}none{% endif %};">
+                                    <label for="date_of_conf" class="form-label">Date of Confirmation</label>
+                                    <input type="date" class="form-control" id="date_of_conf" name="date_of_conf" value="{% if member.date_of_conf %}{{ member.date_of_conf|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="death" name="death" {% if member.death %}checked{% endif %}>
+                                    <label class="form-check-label" for="death">Deceased</label>
+                                </div>
+                                <div class="mt-2" id="deathDateGroup" style="display: {% if member.death %}block{% else %}none{% endif %};">
+                                    <label for="date_of_death" class="form-label">Date of Death</label>
+                                    <input type="date" class="form-control" id="date_of_death" name="date_of_death" value="{% if member.date_of_death %}{{ member.date_of_death|date:'Y-m-d' }}{% endif %}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="image" class="form-label">Photo</label>
+                                {% if member.image %}
+                                <div class="mb-2">
+                                    <img src="{{ member.image.url }}" alt="{{ member.name }}" class="rounded" style="max-height: 100px;">
+                                </div>
+                                {% endif %}
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                <div class="form-text">Upload a new photo to replace the existing one (optional)</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:member_detail' pk=member.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const baptisedCheckbox = document.getElementById('baptised');
+        const baptisedDateGroup = document.getElementById('baptisedDateGroup');
+        const conformedCheckbox = document.getElementById('conformed');
+        const confirmedDateGroup = document.getElementById('confirmedDateGroup');
+        const deathCheckbox = document.getElementById('death');
+        const deathDateGroup = document.getElementById('deathDateGroup');
+        const spouseSelect = document.getElementById('spouse');
+        const domInput = document.getElementById('dom');
+
+        // Show/hide marriage date based on spouse selection
+        spouseSelect.addEventListener('change', function() {
+            if (this.value) {
+                domInput.parentElement.style.display = 'block';
+                domInput.required = true;
+            } else {
+                domInput.parentElement.style.display = 'none';
+                domInput.required = false;
+                domInput.value = '';
+            }
+        });
+
+        // Initial state for marriage date field
+        if (spouseSelect.value) {
+            domInput.parentElement.style.display = 'block';
+            domInput.required = true;
+        } else {
+            domInput.parentElement.style.display = 'none';
+            domInput.required = false;
+        }
+
+        baptisedCheckbox.addEventListener('change', function() {
+            baptisedDateGroup.style.display = this.checked ? 'block' : 'none';
+        });
+
+        conformedCheckbox.addEventListener('change', function() {
+            confirmedDateGroup.style.display = this.checked ? 'block' : 'none';
+        });
+
+        deathCheckbox.addEventListener('change', function() {
+            deathDateGroup.style.display = this.checked ? 'block' : 'none';
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Church - {{ pastorate.pastorate_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=pastorate.pk %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item active">Add Church</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Add New Church</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="church_name" class="form-label">Church Name</label>
+                            <input type="text" class="form-control" id="church_name" name="church_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="short_name" class="form-label">Short Name</label>
+                            <input type="text" class="form-control" id="short_name" name="short_name" maxlength="10" required>
+                            <div class="form-text">Maximum 10 characters</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="abode" class="form-label">Abode (Location)</label>
+                            <input type="text" class="form-control" id="abode" name="abode" required>
+                            <div class="form-text">Physical location or address of the church</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:church_list' pastorate_id=pastorate.pk %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Church
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

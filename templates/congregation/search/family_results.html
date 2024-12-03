@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Family Search Results - Ecclesia{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Family Search Results</h2>
+            <div class="text-muted">
+                {% if query %}
+                    Search results for "{{ query }}"
+                    {% if area_id %}in area{% endif %}
+                    {% if fellowship_id %}in fellowship{% endif %}
+                {% else %}
+                    {% if area_id %}
+                        All families in area
+                    {% elif fellowship_id %}
+                        All families in fellowship
+                    {% else %}
+                        All families
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        <div>
+            <a href="javascript:history.back()" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+        </div>
+    </div>
+
+    {% if families %}
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Family ID</th>
+                            <th>Family Head</th>
+                            <th>Contact</th>
+                            <th>Area</th>
+                            <th>Fellowship</th>
+                            <th>Members</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for family in families %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge bg-secondary">{{ family.family_id }}</span>
+                            </td>
+                            <td>
+                                {{ family.respect.name }} {{ family.initial }} {{ family.family_head }}
+                            </td>
+                            <td>
+                                <div>{{ family.mobile }}</div>
+                                {% if family.email %}
+                                <small class="text-muted">{{ family.email }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ family.area.area_name }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark">
+                                    {{ family.fellowship.fellowship_name }}
+                                </span>
+                            </td>
+                            <td>{{ family.member_set.count }}</td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'congregation:family_detail' pk=family.pk %}" class="btn btn-sm btn-light" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:family_edit' pk=family.pk %}" class="btn btn-sm btn-light" title="Edit Family">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:family_delete' pk=family.pk %}" class="btn btn-sm btn-light text-danger" title="Delete Family">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-search text-muted" style="font-size: 3rem;"></i>
+            </div>
+            <h5 class="text-muted mb-2">No Families Found</h5>
+            <p class="text-muted mb-0">Try adjusting your search terms or filters</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

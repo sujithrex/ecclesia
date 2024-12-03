@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Member - {{ family.family_head }}'s Family - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=family.area.church.pastorate.pk %}">{{ family.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=family.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=family.area.church.pk %}">{{ family.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=family.area.church.pk %}">Areas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_detail' pk=family.area.pk %}">{{ family.area.area_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_list' area_id=family.area.pk %}">Families</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_detail' pk=family.pk %}">{{ family.family_head }}'s Family</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:member_list' family_id=family.pk %}">Members</a></li>
+<li class="breadcrumb-item active">Add</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Add New Member</h3>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="member_id" class="form-label">Member ID</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control bg-light" value="{{ family.family_id }}" readonly>
+                                    <input type="text" class="form-control" id="member_id" name="member_id" value="{{ next_member_number|stringformat:'02d' }}" maxlength="2" pattern="[0-9]{2}" required>
+                                </div>
+                                <div class="form-text">Two-digit number (defaults to {{ next_member_number|stringformat:'02d' }} for new member)</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="aadhar_number" class="form-label">Aadhar Number</label>
+                                <input type="text" class="form-control" id="aadhar_number" name="aadhar_number" pattern="[0-9]{12}" maxlength="12">
+                                <div class="form-text">12-digit Aadhar number (optional)</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="respect" class="form-label">Respect Title</label>
+                                <select class="form-select" id="respect" name="respect" required>
+                                    <option value="">Select Title</option>
+                                    {% for respect in respects %}
+                                    <option value="{{ respect.pk }}">{{ respect.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="initial" class="form-label">Initial</label>
+                                <input type="text" class="form-control" id="initial" name="initial">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="relation" class="form-label">Relation</label>
+                                <select class="form-select" id="relation" name="relation" required>
+                                    <option value="">Select Relation</option>
+                                    {% for relation in relations %}
+                                    <option value="{{ relation.pk }}">{{ relation.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sex" class="form-label">Sex</label>
+                                <select class="form-select" id="sex" name="sex" required>
+                                    <option value="">Select Sex</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                    <option value="O">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="dob" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob" name="dob" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="dom" class="form-label">Date of Marriage</label>
+                                <input type="date" class="form-control" id="dom" name="dom">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="working" class="form-label">Working</label>
+                                <input type="text" class="form-control" id="working" name="working">
+                                <div class="form-text">Occupation or profession</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="working_place" class="form-label">Working Place</label>
+                                <input type="text" class="form-control" id="working_place" name="working_place">
+                                <div class="form-text">Place of work or business</div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="baptised" name="baptised">
+                                    <label class="form-check-label" for="baptised">Baptised</label>
+                                </div>
+                                <div class="mt-2" id="baptisedDateGroup" style="display: none;">
+                                    <label for="date_of_bap" class="form-label">Date of Baptism</label>
+                                    <input type="date" class="form-control" id="date_of_bap" name="date_of_bap">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="conformed" name="conformed">
+                                    <label class="form-check-label" for="conformed">Confirmed</label>
+                                </div>
+                                <div class="mt-2" id="confirmedDateGroup" style="display: none;">
+                                    <label for="date_of_conf" class="form-label">Date of Confirmation</label>
+                                    <input type="date" class="form-control" id="date_of_conf" name="date_of_conf">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="death" name="death">
+                                    <label class="form-check-label" for="death">Deceased</label>
+                                </div>
+                                <div class="mt-2" id="deathDateGroup" style="display: none;">
+                                    <label for="date_of_death" class="form-label">Date of Death</label>
+                                    <input type="date" class="form-control" id="date_of_death" name="date_of_death">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="image" class="form-label">Photo</label>
+                                <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                <div class="form-text">Upload a photo of the member (optional)</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:member_list' family_id=family.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Member
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const baptisedCheckbox = document.getElementById('baptised');
+        const baptisedDateGroup = document.getElementById('baptisedDateGroup');
+        const conformedCheckbox = document.getElementById('conformed');
+        const confirmedDateGroup = document.getElementById('confirmedDateGroup');
+        const deathCheckbox = document.getElementById('death');
+        const deathDateGroup = document.getElementById('deathDateGroup');
+
+        // Member ID formatting
+        const memberIdInput = document.getElementById('member_id');
+        
+        memberIdInput.addEventListener('input', function() {
+            // Remove any non-digit characters
+            this.value = this.value.replace(/\D/g, '');
+            
+            // Ensure it's always 2 digits
+            if (this.value.length > 0) {
+                this.value = this.value.padStart(2, '0');
+            }
+        });
+
+        // Format on blur to ensure two digits
+        memberIdInput.addEventListener('blur', function() {
+            if (this.value) {
+                this.value = this.value.padStart(2, '0');
+            }
+        });
+
+        baptisedCheckbox.addEventListener('change', function() {
+            baptisedDateGroup.style.display = this.checked ? 'block' : 'none';
+        });
+
+        conformedCheckbox.addEventListener('change', function() {
+            confirmedDateGroup.style.display = this.checked ? 'block' : 'none';
+        });
+
+        deathCheckbox.addEventListener('change', function() {
+            deathDateGroup.style.display = this.checked ? 'block' : 'none';
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

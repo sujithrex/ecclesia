@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item active">Dashboard</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Dashboard</h2>
+    </div>
+
+    <!-- Quick Search -->
+    <div class="card mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Quick Search</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Family Search -->
+                <div class="col-md-6">
+                    <form action="{% url 'congregation:family_search' %}" method="get" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="q" 
+                                placeholder="Search families by ID, head name, mobile..."
+                                value="{{ request.GET.q }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search me-2"></i>Search Family
+                            </button>
+                        </div>
+                        <div class="form-text">Search by family ID, head name, or mobile number</div>
+                    </form>
+                </div>
+                <!-- Member Search -->
+                <div class="col-md-6">
+                    <form action="{% url 'congregation:member_search' %}" method="get" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="q" 
+                                placeholder="Search members by ID, name, mobile..."
+                                value="{{ request.GET.q }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search me-2"></i>Search Member
+                            </button>
+                        </div>
+                        <div class="form-text">Search by member ID, name, or any other details</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Celebrations -->
+    <div class="card mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Today's Celebrations</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <!-- Birthdays -->
+                <div class="col-md-6">
+                    <h6 class="mb-3">
+                        <i class="fas fa-birthday-cake text-primary me-2"></i>Birthdays
+                    </h6>
+                    {% if birthdays %}
+                    <ul class="list-unstyled mb-0">
+                        {% for member in birthdays %}
+                        <li class="mb-2">
+                            <div class="d-flex align-items-center">
+                                {% if member.image %}
+                                <img src="{{ member.image.url }}" alt="{{ member.name }}" 
+                                    class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-2" 
+                                    style="width: 32px; height: 32px;">
+                                    <i class="fas fa-user text-secondary"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-medium">
+                                        <a href="{% url 'congregation:family_detail' pk=member.family.pk %}" class="text-decoration-none">
+                                            {{ member.respect.name }} {{ member.initial }} {{ member.name }}
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">{{ member.age }} years • {{ member.family.area.church.church_name }}</small>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">No birthdays today</p>
+                    {% endif %}
+                </div>
+
+                <!-- Wedding Anniversaries -->
+                <div class="col-md-6">
+                    <h6 class="mb-3">
+                        <i class="fas fa-ring text-primary me-2"></i>Wedding Anniversaries
+                    </h6>
+                    {% if anniversaries %}
+                    <ul class="list-unstyled mb-0">
+                        {% for member in anniversaries %}
+                        <li class="mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="me-2">
+                                    {% if member.image %}
+                                    <img src="{{ member.image.url }}" alt="{{ member.name }}" 
+                                        class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" 
+                                        style="width: 32px; height: 32px;">
+                                        <i class="fas fa-user text-secondary"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-medium">
+                                        <a href="{% url 'congregation:family_detail' pk=member.family.pk %}" class="text-decoration-none">
+                                            {{ member.respect.name }} {{ member.initial }} {{ member.name }} & 
+                                            {{ member.spouse.respect.name }} {{ member.spouse.initial }} {{ member.spouse.name }}
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">
+                                        {% if member.marriage_years %}
+                                            {{ member.marriage_years }} years • {{ member.family.area.church.church_name }}
+                                        {% else %}
+                                            {{ member.family.area.church.church_name }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">No anniversaries today</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Pastorates</h6>
+                            <h3 class="mb-0">{{ pastorate_count }}</h3>
+                        </div>
+                        <div class=" bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-braille text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Churches</h6>
+                            <h3 class="mb-0">{{ church_count }}</h3>
+                        </div>
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-church text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Families</h6>
+                            <h3 class="mb-0">{{ family_count }}</h3>
+                        </div>
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-users text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-2">Total Members</h6>
+                            <h3 class="mb-0">{{ member_count }}</h3>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                            <i class="fas fa-user text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

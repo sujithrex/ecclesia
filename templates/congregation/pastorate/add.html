@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Pastorate - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item active">Add Pastorate</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Add New Pastorate</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="pastorate_name" class="form-label">Pastorate Name</label>
+                            <input type="text" class="form-control" id="pastorate_name" name="pastorate_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pastorate_short_name" class="form-label">Short Name</label>
+                            <input type="text" class="form-control" id="pastorate_short_name" name="pastorate_short_name" maxlength="10" required>
+                            <div class="form-text">Maximum 10 characters</div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{% url 'congregation:pastorate_list' %}" class="btn btn-light">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Pastorate
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

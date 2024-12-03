@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ member.name }} - Member Details - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=member.family.area.church.pastorate.pk %}">{{ member.family.area.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=member.family.area.church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=member.family.area.church.pk %}">{{ member.family.area.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_list' church_id=member.family.area.church.pk %}">Areas</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:area_detail' pk=member.family.area.pk %}">{{ member.family.area.area_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_list' area_id=member.family.area.pk %}">Families</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:family_detail' pk=member.family.pk %}">{{ member.family.family_head }}'s Family</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:member_list' family_id=member.family.pk %}">Members</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:member_detail' pk=member.pk %}">{{ member.name }}</a></li>
+<li class="breadcrumb-item active">Delete</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-body text-center p-4">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3 class="card-title mb-3">Delete Member</h3>
+                    <p class="text-muted mb-4">
+                        Are you sure you want to delete the member "{{ member.respect.name }} {{ member.initial }} {{ member.name }}"?
+                        This action cannot be undone.
+                    </p>
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                {% if member.image %}
+                                <img src="{{ member.image.url }}" alt="{{ member.name }}" class="rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover;">
+                                {% else %}
+                                <i class="fas fa-user-circle mb-3" style="font-size: 100px; color: #ccc;"></i>
+                                {% endif %}
+                                <h5 class="mb-1">{{ member.respect.name }} {{ member.initial }} {{ member.name }}</h5>
+                                <p class="text-muted mb-0">{{ member.relation.name }}</p>
+                            </div>
+                            <div class="row text-start">
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Member ID</small>
+                                    <span>{{ member.member_id }}</span>
+                                </div>
+                                <div class="col-6">
+                                    <small class="text-muted d-block">Age</small>
+                                    <span>{{ member.age }} years</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{% url 'congregation:member_detail' pk=member.pk %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Delete Member
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

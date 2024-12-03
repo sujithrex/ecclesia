@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Churches - {{ pastorate.pastorate_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=pastorate.pk %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item active">Churches</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Churches</h2>
+            <div class="text-muted">
+                <span class="badge bg-secondary">{{ pastorate.pastorate_short_name }}</span>
+                {{ pastorate.pastorate_name }}
+            </div>
+        </div>
+        <button class="btn btn-primary" type="button" onclick="window.location.href='{% url 'congregation:church_add' pastorate_id=pastorate.pk %}'">
+            <i class="fas fa-plus me-2"></i>Add Church
+        </button>
+    </div>
+
+    <!-- Churches Grid -->
+    <div class="row">
+        {% for church in churches %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-1">{{ church.church_name }}</h5>
+                            <span class="badge bg-secondary">{{ church.short_name }}</span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-dark p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'congregation:church_edit' pk=church.pk %}">
+                                        <i class="fas fa-edit me-2"></i>Edit
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'congregation:church_delete' pk=church.pk %}">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <p class="text-muted mb-3">
+                        <i class="fas fa-map-marker-alt me-2"></i>{{ church.abode }}
+                    </p>
+                    <div class="d-flex gap-3 text-muted small mb-3">
+                        <div>
+                            <i class="fas fa-layer-group me-1"></i>
+                            <span>{{ church.area_set.count|default:"0" }} Areas</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-users me-1"></i>
+                            <span>{{ church.fellowship_count|default:"0" }} Fellowships</span>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <a href="{% url 'congregation:church_detail' pk=church.pk %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-2"></i>View Church
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'congregation:area_list' church_id=church.pk %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-layer-group me-1"></i>Areas
+                            </a>
+                        </div>
+                        <div class="col-6">
+                            <a href="{% url 'congregation:fellowship_list' church_id=church.pk %}" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-users me-1"></i>Fellowships
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <small><i class="fas fa-clock me-1"></i>Updated: {{ church.updated_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-church text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h4>No Churches Yet</h4>
+                <p class="text-muted mb-4">Start by adding a church to {{ pastorate.pastorate_name }}.</p>
+                <a href="{% url 'congregation:church_add' pastorate_id=pastorate.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add First Church
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Areas - {{ church.church_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=church.pastorate.pk %}">{{ church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_list' pastorate_id=church.pastorate.pk %}">Churches</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:church_detail' pk=church.pk %}">{{ church.church_name }}</a></li>
+<li class="breadcrumb-item active">Areas</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Areas</h2>
+            <div class="text-muted">
+                <span class="badge bg-secondary">{{ church.short_name }}</span>
+                {{ church.church_name }}
+            </div>
+        </div>
+        <a href="{% url 'congregation:area_add' church_id=church.pk %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Area
+        </a>
+    </div>
+
+    <!-- Areas Grid -->
+    <div class="row">
+        {% for area in areas %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="card-title mb-1">{{ area.area_name }}</h5>
+                            <span class="badge bg-secondary">{{ area.area_id }}</span>
+                        </div>
+                        <div class="dropdown">
+                            <button class="btn btn-link text-dark p-0" type="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'congregation:area_edit' pk=area.pk %}">
+                                        <i class="fas fa-edit me-2"></i>Edit
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'congregation:area_delete' pk=area.pk %}">
+                                        <i class="fas fa-trash me-2"></i>Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 text-muted small mb-3">
+                        <div>
+                            <i class="fas fa-home me-1"></i>
+                            <span>{{ area.family_set.count|default:"0" }} Families</span>
+                        </div>
+                        <div>
+                            <i class="fas fa-users me-1"></i>
+                            <span>{{ area.family_set.count|default:"0" }} Members</span>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <a href="{% url 'congregation:area_detail' pk=area.pk %}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-eye me-2"></i>View Area
+                            </a>
+                        </div>
+                        <div class="col-12">
+                            <a href="#" class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-home me-1"></i>Manage Families
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <small><i class="fas fa-clock me-1"></i>Updated: {{ area.updated_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-layer-group text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h4>No Areas Yet</h4>
+                <p class="text-muted mb-4">Start by adding an area to {{ church.church_name }}.</p>
+                <a href="{% url 'congregation:area_add' church_id=church.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add First Area
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

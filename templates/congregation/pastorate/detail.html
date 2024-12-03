@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ pastorate.pastorate_name }} - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item active">{{ pastorate.pastorate_name }}</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ pastorate.pastorate_name }}</h2>
+            <div class="text-muted">
+                <span class="badge bg-secondary me-2">{{ pastorate.pastorate_short_name }}</span>
+                <small><i class="fas fa-clock me-1"></i>Created: {{ pastorate.created_at|date:"M d, Y" }}</small>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'congregation:pastorate_edit' pk=pastorate.pk %}" class="btn btn-light">
+                <i class="fas fa-edit me-2"></i>Edit
+            </a>
+            <a href="{% url 'congregation:pastorate_delete' pk=pastorate.pk %}" class="btn btn-danger">
+                <i class="fas fa-trash me-2"></i>Delete
+            </a>
+        </div>
+    </div>
+
+    <!-- Churches Section -->
+    <div class="card">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="mb-0">Churches</h5>
+            <a href="{% url 'congregation:church_add' pastorate_id=pastorate.pk %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-2"></i>Add Church
+            </a>
+        </div>
+        <div class="card-body">
+            {% if churches %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Short Name</th>
+                            <th>Abode</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for church in churches %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'congregation:church_detail' pk=church.pk %}" class="text-decoration-none">
+                                    {{ church.church_name }}
+                                </a>
+                            </td>
+                            <td><span class="badge bg-secondary">{{ church.short_name }}</span></td>
+                            <td>{{ church.abode }}</td>
+                            <td><small class="text-muted">{{ church.created_at|date:"M d, Y" }}</small></td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="{% url 'congregation:church_detail' pk=church.pk %}" class="btn btn-sm btn-light" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:church_edit' pk=church.pk %}" class="btn btn-sm btn-light" title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:church_delete' pk=church.pk %}" class="btn btn-sm btn-light text-danger" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4">
+                <div class="mb-3">
+                    <i class="fas fa-church text-muted" style="font-size: 3rem;"></i>
+                </div>
+                <h5>No Churches Yet</h5>
+                <p class="text-muted">Start by adding a church to this pastorate.</p>
+                <a href="{% url 'congregation:church_add' pastorate_id=pastorate.pk %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add First Church
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
