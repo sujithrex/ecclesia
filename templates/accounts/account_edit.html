@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Account - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Accounts Dashboard</a></li>
+<li class="breadcrumb-item active">Edit Account</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Edit Account</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if account.level == 'pastorate' %}
+                <div class="mb-3">
+                    <label class="form-label">Pastorate</label>
+                    <select name="entity_id" class="form-select" required>
+                        {% for pastorate in pastorates %}
+                        <option value="{{ pastorate.id }}" {% if account.pastorate.id == pastorate.id %}selected{% endif %}>
+                            {{ pastorate.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <div class="mb-3">
+                    <label class="form-label">Church</label>
+                    <select name="entity_id" class="form-select" required>
+                        {% for church in churches %}
+                        <option value="{{ church.id }}" {% if account.church.id == church.id %}selected{% endif %}>
+                            {{ church.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label">Account Type</label>
+                    <select name="account_type" class="form-select" required>
+                        {% for type in account_types %}
+                        <option value="{{ type.id }}" {% if account.account_type.id == type.id %}selected{% endif %}>
+                            {{ type.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Account Name</label>
+                    <input type="text" name="name" class="form-control" value="{{ account.name }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Account Number</label>
+                    <input type="text" name="account_number" class="form-control" value="{{ account.account_number }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3">{{ account.description }}</textarea>
+                </div>
+
+                <div class="text-end">
+                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

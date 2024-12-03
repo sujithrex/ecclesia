@@ -5,6 +5,7 @@ from .models import Pastorate, Church, Area, Fellowship, Family, Respect, Relati
 from django.db.models import Count, F, Q
 from datetime import date
 from django.core.paginator import Paginator
+from accounts.models import AccountType, TransactionHistory, LedgerGroup
 
 @login_required
 def pastorate_list(request):
@@ -858,11 +859,16 @@ def member_search(request):
     }
     return render(request, 'congregation/search/member_results.html', context)
 
+@login_required
 def essentials(request):
-    respects = Respect.objects.all().order_by('name')
-    relations = Relation.objects.all().order_by('name')
     context = {
-        'respects': respects,
-        'relations': relations
+        'respects': Respect.objects.all().order_by('name'),
+        'relations': Relation.objects.all().order_by('name'),
+        'account_types': AccountType.objects.all().order_by('name'),
+        'ledger_groups': LedgerGroup.objects.all().order_by('name'),
+        'transaction_history': TransactionHistory.objects.select_related(
+            'transaction', 
+            'modified_by'
+        ).order_by('-modified_at')[:10]  # Get last 10 changes
     }
     return render(request, 'congregation/settings/essentials.html', context)

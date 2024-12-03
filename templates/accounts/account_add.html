@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Account - Ecclesia{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Accounts Dashboard</a></li>
+{% if level == 'church' and select_pastorate %}
+<li class="breadcrumb-item active">Select Pastorate</li>
+{% else %}
+<li class="breadcrumb-item active">Add {% if level == 'pastorate' %}Pastorate{% else %}Church{% endif %} Account</li>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                {% if level == 'church' and select_pastorate %}
+                    Select Pastorate
+                {% else %}
+                    Add New {% if level == 'pastorate' %}Pastorate{% else %}Church{% endif %} Account
+                {% endif %}
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if level == 'church' and select_pastorate %}
+                <div class="list-group">
+                    {% for pastorate in pastorates %}
+                    <a href="{% url 'accounts:account_add' %}?level=church&pastorate_id={{ pastorate.id }}" 
+                       class="list-group-item list-group-item-action">
+                        {{ pastorate.pastorate_name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if level == 'pastorate' %}
+                    <div class="mb-3">
+                        <label class="form-label">Select Pastorate</label>
+                        <select name="entity_id" class="form-select" required>
+                            <option value="">Select Pastorate</option>
+                            {% for pastorate in pastorates %}
+                            <option value="{{ pastorate.id }}">{{ pastorate.pastorate_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% else %}
+                    <div class="mb-3">
+                        <label class="form-label">Select Church from {{ pastorate.pastorate_name }}</label>
+                        <select name="entity_id" class="form-select" required>
+                            <option value="">Select Church</option>
+                            {% for church in churches %}
+                            <option value="{{ church.id }}">{{ church.church_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label">Account Type</label>
+                        <select name="account_type" class="form-select" required>
+                            <option value="">Select Type</option>
+                            {% for type in account_types %}
+                            <option value="{{ type.id }}">{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Account Name</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Account Number</label>
+                        <input type="text" name="account_number" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="text-end">
+                        <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Create Account</button>
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

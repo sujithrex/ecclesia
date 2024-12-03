@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Transaction - {{ transaction.reference_number }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+{% if transaction.account.level == 'pastorate' %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.pastorate.id %}">{{ transaction.account.pastorate.pastorate_name }}</a></li>
+{% else %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.church.pastorate.id %}">{{ transaction.account.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' pk=transaction.account.church.id %}">{{ transaction.account.church.church_name }}</a></li>
+{% endif %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:account_detail' pk=transaction.account.id %}">{{ transaction.account.name }}</a></li>
+<li class="breadcrumb-item active">Delete Transaction</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Delete Transaction</h5>
+                        <span class="badge bg-secondary">{{ transaction.reference_number }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h4 class="alert-heading">Warning!</h4>
+                        <p>Are you sure you want to delete this transaction? This action cannot be undone.</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="mb-3">Transaction Details:</h6>
+                        <dl class="row">
+                            <dt class="col-sm-3">Type</dt>
+                            <dd class="col-sm-9">{{ transaction.get_transaction_type_display }}</dd>
+
+                            <dt class="col-sm-3">Amount</dt>
+                            <dd class="col-sm-9">₹{{ transaction.amount }}</dd>
+
+                            <dt class="col-sm-3">Date</dt>
+                            <dd class="col-sm-9">{{ transaction.transaction_date }}</dd>
+
+                            <dt class="col-sm-3">Description</dt>
+                            <dd class="col-sm-9">{{ transaction.description }}</dd>
+                        </dl>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-end">
+                            <a href="{% url 'accounts:account_detail' pk=transaction.account.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

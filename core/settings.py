@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'web',
     'congregation',
+    'accounts',
 ]
 
 MIDDLEWARE = [

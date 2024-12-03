@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Transaction - {{ account.name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+{% if account.level == 'pastorate' %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=account.pastorate.id %}">{{ account.pastorate.pastorate_name }}</a></li>
+{% else %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=account.church.pastorate.id %}">{{ account.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' pk=account.church.id %}">{{ account.church.church_name }}</a></li>
+{% endif %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:account_detail' pk=account.id %}">{{ account.name }}</a></li>
+<li class="breadcrumb-item active">Add Transaction</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Add New Transaction</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="transactionForm">
+                        {% csrf_token %}
+                        
+                        {% if account.level == 'pastorate' %}
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        data-type="{{ category.transaction_type }}"
+                                        data-requires-number="{{ category.requires_number|yesno:'true,false' }}"
+                                        data-requires-church="{{ category.requires_church|yesno:'true,false' }}">
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Type</label>
+                            <select name="transaction_type" class="form-select" required>
+                                <option value="">Select Type</option>
+                                <option value="credit">Credit (Add Money)</option>
+                                <option value="debit">Debit (Remove Money)</option>
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required>
+                            </div>
+                            <div class="form-text">Enter amount in rupees (e.g., 1000.00)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Date</label>
+                            <input type="date" name="transaction_date" class="form-control" required>
+                        </div>
+
+                        <!-- Dynamic Fields -->
+                        <div id="referenceNumberField" class="mb-3" style="display: none;">
+                            <label class="form-label">Reference Number</label>
+                            <input type="text" name="reference_number" class="form-control" placeholder="Enter receipt/bill/voucher number">
+                        </div>
+
+                        <div id="churchField" class="mb-3" style="display: none;">
+                            <label class="form-label">Select Church</label>
+                            <select name="church" class="form-select">
+                                <option value="">Select Church</option>
+                                {% for church in churches %}
+                                <option value="{{ church.id }}">{{ church.church_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" required></textarea>
+                            <div class="form-text">Please provide a detailed description of the transaction.</div>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{% url 'accounts:account_detail' pk=account.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default transaction date to current date
+    const now = new Date();
+    document.querySelector('input[name="transaction_date"]').value = now.toISOString().split('T')[0];
+
+    // Handle dynamic fields based on category selection
+    const categorySelect = document.querySelector('select[name="category"]');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const requiresNumber = selectedOption.dataset.requiresNumber === 'true';
+            const requiresChurch = selectedOption.dataset.requiresChurch === 'true';
+            
+            // Show/hide reference number field
+            document.getElementById('referenceNumberField').style.display = 
+                requiresNumber ? 'block' : 'none';
+            
+            // Show/hide church selection field
+            document.getElementById('churchField').style.display = 
+                requiresChurch ? 'block' : 'none';
+            
+            // Update required attributes
+            document.querySelector('input[name="reference_number"]').required = requiresNumber;
+            document.querySelector('select[name="church"]').required = requiresChurch;
+        });
+    }
+
+    // Form validation
+    const form = document.getElementById('transactionForm');
+    form.addEventListener('submit', function(event) {
+        const amount = form.querySelector('input[name="amount"]').value;
+        if (isNaN(amount) || parseFloat(amount) <= 0) {
+            event.preventDefault();
+            alert('Please enter a valid positive amount.');
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %} 

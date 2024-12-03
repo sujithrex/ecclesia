@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ category.name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:essentials' %}">Essential Settings</a></li>
+<li class="breadcrumb-item active">Delete Category</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Delete Transaction Category</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">Warning!</h5>
+                        <p>Are you sure you want to delete the category "{{ category.name }}"?</p>
+                        <hr>
+                        <p class="mb-0">This action cannot be undone. All transactions using this category will be affected.</p>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h6 class="card-subtitle mb-3 text-muted">Category Details</h6>
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Name</dt>
+                                <dd class="col-sm-8">{{ category.name }}</dd>
+
+                                <dt class="col-sm-4">Type</dt>
+                                <dd class="col-sm-8">{{ category.get_transaction_type_display }}</dd>
+
+                                <dt class="col-sm-4">Status</dt>
+                                <dd class="col-sm-8">
+                                    {% if category.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                    {% endif %}
+                                </dd>
+
+                                <dt class="col-sm-4">Created</dt>
+                                <dd class="col-sm-8">{{ category.created_at|date:"F j, Y" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-end">
+                            <a href="{% url 'congregation:essentials' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete Category</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

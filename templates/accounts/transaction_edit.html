@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Transaction - {{ transaction.reference_number }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+{% if transaction.account.level == 'pastorate' %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.pastorate.id %}">{{ transaction.account.pastorate.pastorate_name }}</a></li>
+{% else %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.church.pastorate.id %}">{{ transaction.account.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' pk=transaction.account.church.id %}">{{ transaction.account.church.church_name }}</a></li>
+{% endif %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:account_detail' pk=transaction.account.id %}">{{ transaction.account.name }}</a></li>
+<li class="breadcrumb-item active">Edit Transaction</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Edit Transaction</h5>
+                        <span class="badge bg-secondary">{{ transaction.reference_number }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Type</label>
+                            <select name="transaction_type" class="form-select" required>
+                                <option value="credit" {% if transaction.transaction_type == 'credit' %}selected{% endif %}>Credit (Add Money)</option>
+                                <option value="debit" {% if transaction.transaction_type == 'debit' %}selected{% endif %}>Debit (Remove Money)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="amount" class="form-control" step="0.01" min="0" value="{{ transaction.amount }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Date</label>
+                            <input type="datetime-local" name="transaction_date" class="form-control" value="{{ transaction.transaction_date|date:'Y-m-d\TH:i' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" required>{{ transaction.description }}</textarea>
+                            <div class="form-text">Please provide a detailed description of the transaction.</div>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{% url 'accounts:account_detail' pk=transaction.account.id %}" class="btn btn-secondary">Cancel</a>
+                            <a href="{% url 'accounts:transaction_history' pk=transaction.pk %}" class="btn btn-info">
+                                <i class="fas fa-history"></i> View History
+                            </a>
+                            <button type="submit" class="btn btn-primary">Update Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

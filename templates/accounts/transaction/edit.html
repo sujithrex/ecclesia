@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Transaction - {{ transaction.reference_number }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+{% if transaction.account.level == 'pastorate' %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.pastorate.id %}">{{ transaction.account.pastorate.pastorate_name }}</a></li>
+{% else %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.church.pastorate.id %}">{{ transaction.account.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' pk=transaction.account.church.id %}">{{ transaction.account.church.church_name }}</a></li>
+{% endif %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:account_detail' pk=transaction.account.id %}">{{ transaction.account.name }}</a></li>
+<li class="breadcrumb-item active">Edit Transaction</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Edit Transaction</h5>
+                        <span class="badge bg-secondary">{{ transaction.reference_number }}</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="transactionForm">
+                        {% csrf_token %}
+                        
+                        {% if transaction.account.level == 'pastorate' %}
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Category</label>
+                            <select name="category" class="form-select" required>
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" 
+                                        data-type="{{ category.transaction_type }}"
+                                        data-requires-number="{{ category.requires_number|yesno:'true,false' }}"
+                                        data-requires-church="{{ category.requires_church|yesno:'true,false' }}"
+                                        {% if transaction.details.category.id == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="referenceNumberField" class="mb-3" {% if not transaction.details.category.requires_number %}style="display: none;"{% endif %}>
+                            <label class="form-label">Reference Number</label>
+                            <input type="text" name="reference_number" class="form-control" 
+                                   value="{{ transaction.details.reference_number }}"
+                                   placeholder="Enter receipt/bill/voucher number">
+                        </div>
+
+                        <div id="churchField" class="mb-3" {% if not transaction.details.category.requires_church %}style="display: none;"{% endif %}>
+                            <label class="form-label">Select Church</label>
+                            <select name="church" class="form-select">
+                                <option value="">Select Church</option>
+                                {% for church in churches %}
+                                <option value="{{ church.id }}" {% if transaction.details.church.id == church.id %}selected{% endif %}>
+                                    {{ church.church_name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% else %}
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Type</label>
+                            <select name="transaction_type" class="form-select" required>
+                                <option value="credit" {% if transaction.transaction_type == 'credit' %}selected{% endif %}>Credit (Add Money)</option>
+                                <option value="debit" {% if transaction.transaction_type == 'debit' %}selected{% endif %}>Debit (Remove Money)</option>
+                            </select>
+                        </div>
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" value="{{ transaction.amount }}" required>
+                            </div>
+                            <div class="form-text">Enter amount in rupees (e.g., 1000.00)</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Date</label>
+                            <input type="date" name="transaction_date" class="form-control" value="{{ transaction.transaction_date|date:'Y-m-d' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3">{{ transaction.description }}</textarea>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{% url 'accounts:account_detail' pk=transaction.account.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.querySelector('select[name="category"]');
+    const referenceNumberField = document.getElementById('referenceNumberField');
+    const churchField = document.getElementById('churchField');
+    
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const requiresNumber = selectedOption.dataset.requiresNumber === 'true';
+            const requiresChurch = selectedOption.dataset.requiresChurch === 'true';
+            
+            // Show/hide reference number field
+            if (referenceNumberField) {
+                referenceNumberField.style.display = requiresNumber ? 'block' : 'none';
+                const referenceInput = referenceNumberField.querySelector('input');
+                if (referenceInput) {
+                    referenceInput.required = requiresNumber;
+                }
+            }
+            
+            // Show/hide church field
+            if (churchField) {
+                churchField.style.display = requiresChurch ? 'block' : 'none';
+                const churchSelect = churchField.querySelector('select');
+                if (churchSelect) {
+                    churchSelect.required = requiresChurch;
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

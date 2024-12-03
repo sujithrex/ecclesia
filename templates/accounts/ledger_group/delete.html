@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Ledger Group{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:essentials' %}">Essential Settings</a></li>
+<li class="breadcrumb-item active">Delete Ledger Group</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Delete Ledger Group</h5>
+                </div>
+                <div class="card-body">
+                    <p class="alert alert-danger">
+                        Are you sure you want to delete the ledger group "{{ ledger_group.name }}"?
+                        This action cannot be undone.
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="text-end">
+                            <a href="{% url 'congregation:essentials' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-danger">Delete Ledger Group</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
