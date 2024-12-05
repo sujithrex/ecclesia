@@ -7,6 +7,7 @@ from django.utils import timezone
 from ..models import Transaction, Account, PrimaryCategory, SecondaryCategory
 from congregation.models import Pastorate, Church, Family, Member
 from decimal import Decimal
+from django.http import Http404
 
 # Receipt Views
 @login_required
@@ -1414,10 +1415,10 @@ def custom_credit_delete(request, pastorate_id, pk):
 def contra_list(request, pastorate_id):
     pastorate = get_object_or_404(Pastorate, pk=pastorate_id)
     
-    # Get all contra transactions for this pastorate and its churches
+    # Get only contra debit transactions for this pastorate and its churches
     transactions = Transaction.objects.filter(
         Q(account__pastorate=pastorate) | Q(account__church__pastorate=pastorate),
-        transaction_type='contra'
+        transaction_type='contra'  # Only get debit entries
     ).select_related(
         'account',
         'to_account',
@@ -1524,29 +1525,52 @@ def contra_add(request, pastorate_id):
 @login_required
 def contra_detail(request, pastorate_id, pk):
     pastorate = get_object_or_404(Pastorate, pk=pastorate_id)
-    transaction = get_object_or_404(
-        Transaction.objects.select_related(
+    
+    # Try to get either the debit or credit entry
+    try:
+        transaction = Transaction.objects.select_related(
             'account',
             'to_account',
             'from_account',
             'created_by'
-        ),
-        pk=pk,
-        transaction_type='contra'
-    )
+        ).get(
+            pk=pk,
+            transaction_type__in=['contra', 'contra_credit']
+        )
+    except Transaction.DoesNotExist:
+        raise Http404("Transaction not found")
     
-    # Get the corresponding credit entry
-    credit_entry = Transaction.objects.select_related(
-        'account',
-        'to_account',
-        'from_account'
-    ).filter(
-        transaction_type='contra_credit',
-        from_account=transaction.account,
-        to_account=transaction.to_account,
-        date=transaction.date,
-        amount=transaction.amount
-    ).first()
+    # If this is a credit entry, get the corresponding debit entry
+    if transaction.transaction_type == 'contra_credit':
+        credit_entry = transaction
+        debit_entry = Transaction.objects.select_related(
+            'account',
+            'to_account',
+            'from_account'
+        ).filter(
+            transaction_type='contra',
+            account=transaction.from_account,
+            to_account=transaction.account,
+            date=transaction.date,
+            amount=transaction.amount
+        ).first()
+        if debit_entry:
+            transaction = debit_entry
+        else:
+            raise Http404("Corresponding debit entry not found")
+    # If this is a debit entry, get the corresponding credit entry
+    else:
+        credit_entry = Transaction.objects.select_related(
+            'account',
+            'to_account',
+            'from_account'
+        ).filter(
+            transaction_type='contra_credit',
+            from_account=transaction.account,
+            to_account=transaction.to_account,
+            date=transaction.date,
+            amount=transaction.amount
+        ).first()
     
     context = {
         'pastorate': pastorate,

@@ -9,6 +9,26 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    /* Remove hover effects */
+    .card {
+        transition: none !important;
+        box-shadow: none !important;
+    }
+    .card:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    /* Remove button hover effects */
+    .btn {
+        transition: none !important;
+    }
+    .btn:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+</style>
+
 <div class="container-fluid">
     <!-- Pastorate Summary Card -->
     <div class="card mb-4">

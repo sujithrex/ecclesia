@@ -36,7 +36,6 @@
                             <th>From Account</th>
                             <th>To Account</th>
                             <th>Amount</th>
-                            <th>Type</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -46,51 +45,24 @@
                             <td>{{ transaction.date }}</td>
                             <td>{{ transaction.reference_number }}</td>
                             <td>
-                                {% if transaction.transaction_type == 'contra' %}
-                                    {% if transaction.account.level == 'pastorate' %}
-                                        <span class="badge bg-primary me-2">Pastorate</span>
-                                    {% else %}
-                                        <span class="badge bg-info me-2">LCF</span>
-                                        {{ transaction.account.church.church_name }} -
-                                    {% endif %}
-                                    {{ transaction.account.name }}
+                                {% if transaction.account.level == 'pastorate' %}
+                                    <span class="badge bg-primary me-2">Pastorate</span>
                                 {% else %}
-                                    {% if transaction.from_account.level == 'pastorate' %}
-                                        <span class="badge bg-primary me-2">Pastorate</span>
-                                    {% else %}
-                                        <span class="badge bg-info me-2">LCF</span>
-                                        {{ transaction.from_account.church.church_name }} -
-                                    {% endif %}
-                                    {{ transaction.from_account.name }}
+                                    <span class="badge bg-info me-2">LCF</span>
+                                    {{ transaction.account.church.church_name }} -
                                 {% endif %}
+                                {{ transaction.account.name }}
                             </td>
                             <td>
-                                {% if transaction.transaction_type == 'contra' %}
-                                    {% if transaction.to_account.level == 'pastorate' %}
-                                        <span class="badge bg-primary me-2">Pastorate</span>
-                                    {% else %}
-                                        <span class="badge bg-info me-2">LCF</span>
-                                        {{ transaction.to_account.church.church_name }} -
-                                    {% endif %}
-                                    {{ transaction.to_account.name }}
+                                {% if transaction.to_account.level == 'pastorate' %}
+                                    <span class="badge bg-primary me-2">Pastorate</span>
                                 {% else %}
-                                    {% if transaction.account.level == 'pastorate' %}
-                                        <span class="badge bg-primary me-2">Pastorate</span>
-                                    {% else %}
-                                        <span class="badge bg-info me-2">LCF</span>
-                                        {{ transaction.account.church.church_name }} -
-                                    {% endif %}
-                                    {{ transaction.account.name }}
+                                    <span class="badge bg-info me-2">LCF</span>
+                                    {{ transaction.to_account.church.church_name }} -
                                 {% endif %}
+                                {{ transaction.to_account.name }}
                             </td>
                             <td>₹ {{ transaction.amount }}</td>
-                            <td>
-                                {% if transaction.transaction_type == 'contra' %}
-                                    <span class="badge bg-danger">Debit</span>
-                                {% else %}
-                                    <span class="badge bg-success">Credit</span>
-                                {% endif %}
-                            </td>
                             <td>
                                 <div class="btn-group">
                                     <a href="{% url 'accounts:contra_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">
@@ -107,7 +79,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="7" class="text-center py-4">
+                            <td colspan="6" class="text-center py-4">
                                 <p class="text-muted mb-0">No contra transfers found</p>
                             </td>
                         </tr>

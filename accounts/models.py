@@ -188,6 +188,10 @@ def create_default_accounts(entity, level):
         name='Bank Account',
         defaults={'description': 'For managing bank transactions'}
     )
+    general_type, _ = AccountType.objects.get_or_create(
+        name='General Account',
+        defaults={'description': 'For managing general transactions'}
+    )
     
     # Create accounts based on level
     if level == 'pastorate':
@@ -207,6 +211,16 @@ def create_default_accounts(entity, level):
             account_type=bank_type,
             account_number=f"BANK-{entity.id:03d}",
             description=f"Default bank account for {entity.pastorate_name}",
+            pastorate=entity,
+            level='pastorate'
+        )
+
+        # Create diocese account
+        Account.objects.create(
+            name=f"{entity.pastorate_name} Diocese Account",
+            account_type=general_type,
+            account_number=f"DIO-{entity.id:03d}",
+            description=f"Diocese account for {entity.pastorate_name}",
             pastorate=entity,
             level='pastorate'
         )
