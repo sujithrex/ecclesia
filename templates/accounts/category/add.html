@@ -4,7 +4,7 @@
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'web:essentials' %}">Essential Settings</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:essentials' %}">Essential Settings</a></li>
 <li class="breadcrumb-item active">Add Transaction Category</li>
 {% endblock %}
 
@@ -26,18 +26,6 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="form-label">Category Type</label>
-                            <select name="category_type" class="form-select" required>
-                                <option value="">Select Type</option>
-                                <option value="receipts">Receipts</option>
-                                <option value="offertory">Church Offertory</option>
-                                <option value="bills">Bills and Vouchers</option>
-                                <option value="acquittance">Acquittance</option>
-                                <option value="ledger">Ledger Entry</option>
-                            </select>
-                        </div>
-                        
-                        <div class="mb-3">
                             <label class="form-label">Transaction Type</label>
                             <select name="transaction_type" class="form-select" required>
                                 <option value="">Select Type</option>
@@ -54,7 +42,7 @@
                         </div>
                         
                         <div class="text-end">
-                            <a href="{% url 'web:essentials' %}" class="btn btn-secondary">Cancel</a>
+                            <a href="{% url 'congregation:essentials' %}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Create Category</button>
                         </div>
                     </form>

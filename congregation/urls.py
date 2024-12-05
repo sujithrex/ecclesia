@@ -49,12 +49,14 @@ urlpatterns = [
     path('member/search/', views.member_search, name='member_search'),
 
     # Settings URLs
-    path('respect/', views.respect_list, name='respect_list'),
-    path('respect/add/', views.respect_add, name='respect_add'),
-    path('respect/<int:pk>/edit/', views.respect_edit, name='respect_edit'),
-    path('respect/<int:pk>/delete/', views.respect_delete, name='respect_delete'),
+    path('settings/essentials/', views.essentials, name='essentials'),
+    path('settings/respect/', views.respect_list, name='respect_list'),
+    path('settings/respect/add/', views.respect_add, name='respect_add'),
+    path('settings/respect/<int:pk>/edit/', views.respect_edit, name='respect_edit'),
+    path('settings/respect/<int:pk>/delete/', views.respect_delete, name='respect_delete'),
 
-    path('relation/add/', views.relation_add, name='relation_add'),
-    path('relation/<int:pk>/edit/', views.relation_edit, name='relation_edit'),
-    path('relation/<int:pk>/delete/', views.relation_delete, name='relation_delete'),
+    path('settings/relation/', views.relation_list, name='relation_list'),
+    path('settings/relation/add/', views.relation_add, name='relation_add'),
+    path('settings/relation/<int:pk>/edit/', views.relation_edit, name='relation_edit'),
+    path('settings/relation/<int:pk>/delete/', views.relation_delete, name='relation_delete'),
 ] 

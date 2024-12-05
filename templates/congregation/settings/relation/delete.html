@@ -1,29 +1,41 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete Relation - Settings - Ecclesia{% endblock %}
+{% block title %}Delete {{ relation.name }} - Settings - Ecclesia{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'web:essentials' %}">Settings</a></li>
-<li class="breadcrumb-item active">Delete Relation</li>
+<li class="breadcrumb-item">Settings</li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:relation_list' %}">Relations</a></li>
+<li class="breadcrumb-item active">Delete</li>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card">
-                <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">Delete Relation</h5>
-                </div>
-                <div class="card-body">
-                    <p class="mb-4">Are you sure you want to delete the relation "{{ relation.name }}"?</p>
-                    
+            <div class="card border-danger">
+                <div class="card-body text-center p-4">
+                    <div class="mb-4">
+                        <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <h3 class="card-title mb-3">Delete Relation</h3>
+                    <p class="text-muted mb-4">
+                        Are you sure you want to delete the relation "{{ relation.name }}"?
+                        This action cannot be undone.
+                    </p>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        If this relation is being used by any members, it cannot be deleted.
+                    </div>
                     <form method="post">
                         {% csrf_token %}
-                        <div class="text-end">
-                            <a href="{% url 'web:essentials' %}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-danger">Delete Relation</button>
+                        <div class="d-flex justify-content-center gap-2">
+                            <a href="{% url 'congregation:relation_list' %}" class="btn btn-light">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Delete Relation
+                            </button>
                         </div>
                     </form>
                 </div>

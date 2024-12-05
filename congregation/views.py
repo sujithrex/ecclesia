@@ -536,10 +536,11 @@ def family_delete(request, pk):
 # Settings Views - Respect
 @login_required
 def respect_list(request):
-    respects = Respect.objects.all().order_by('name')
-    return render(request, 'congregation/settings/respect/list.html', {
-        'respects': respects
-    })
+    respects = Respect.objects.all()
+    context = {
+        'respects': respects,
+    }
+    return render(request, 'congregation/settings/respect/list.html', context)
 
 @login_required
 def respect_add(request):
@@ -590,36 +591,39 @@ def relation_list(request):
 @login_required
 def relation_add(request):
     if request.method == 'POST':
-        relation = Relation(
-            name=request.POST['name']
-        )
-        relation.save()
+        name = request.POST.get('name')
+        relation = Relation.objects.create(name=name)
         messages.success(request, 'Relation added successfully.')
-        return redirect('web:essentials')
+        return redirect('congregation:relation_list')
     return render(request, 'congregation/settings/relation/add.html')
 
 @login_required
 def relation_edit(request, pk):
     relation = get_object_or_404(Relation, pk=pk)
     if request.method == 'POST':
-        relation.name = request.POST['name']
+        relation.name = request.POST.get('name')
         relation.save()
         messages.success(request, 'Relation updated successfully.')
-        return redirect('web:essentials')
-    return render(request, 'congregation/settings/relation/edit.html', {
-        'relation': relation
-    })
+        return redirect('congregation:relation_list')
+    context = {
+        'relation': relation,
+    }
+    return render(request, 'congregation/settings/relation/edit.html', context)
 
 @login_required
 def relation_delete(request, pk):
     relation = get_object_or_404(Relation, pk=pk)
     if request.method == 'POST':
-        relation.delete()
-        messages.success(request, 'Relation deleted successfully.')
-        return redirect('web:essentials')
-    return render(request, 'congregation/settings/relation/delete.html', {
-        'relation': relation
-    })
+        try:
+            relation.delete()
+            messages.success(request, 'Relation deleted successfully.')
+        except models.ProtectedError:
+            messages.error(request, 'Cannot delete this relation as it is being used by members.')
+        return redirect('congregation:relation_list')
+    context = {
+        'relation': relation,
+    }
+    return render(request, 'congregation/settings/relation/delete.html', context)
 
 # Member Views
 @login_required

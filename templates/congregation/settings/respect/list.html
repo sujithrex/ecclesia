@@ -10,22 +10,23 @@
 
 {% block content %}
 <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Respect Titles</h2>
+        <a href="{% url 'congregation:respect_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add Respect Title
+        </a>
+    </div>
+
+    {% if respects %}
     <div class="card">
-        <div class="card-header bg-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Respect Titles</h5>
-                <a href="{% url 'congregation:respect_add' %}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus me-1"></i> Add New
-                </a>
-            </div>
-        </div>
         <div class="card-body">
-            {% if respects %}
             <div class="table-responsive">
-                <table class="table table-hover">
+                <table class="table table-hover align-middle">
                     <thead>
                         <tr>
                             <th>Title</th>
+                            <th>Created</th>
+                            <th>Last Updated</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -33,12 +34,14 @@
                         {% for respect in respects %}
                         <tr>
                             <td>{{ respect.name }}</td>
+                            <td>{{ respect.created_at|date:"M d, Y" }}</td>
+                            <td>{{ respect.updated_at|date:"M d, Y" }}</td>
                             <td>
                                 <div class="btn-group">
-                                    <a href="{% url 'congregation:respect_edit' pk=respect.id %}" class="btn btn-sm btn-outline-primary">
+                                    <a href="{% url 'congregation:respect_edit' pk=respect.pk %}" class="btn btn-sm btn-light" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="{% url 'congregation:respect_delete' pk=respect.id %}" class="btn btn-sm btn-outline-danger">
+                                    <a href="{% url 'congregation:respect_delete' pk=respect.pk %}" class="btn btn-sm btn-light text-danger" title="Delete">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </div>
@@ -48,10 +51,12 @@
                     </tbody>
                 </table>
             </div>
-            {% else %}
-            <p class="text-muted mb-0">No respect titles found.</p>
-            {% endif %}
         </div>
     </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>No respect titles found. Click the "Add Respect Title" button to create one.
+    </div>
+    {% endif %}
 </div>
 {% endblock %} 

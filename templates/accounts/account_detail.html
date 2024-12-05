@@ -1,9 +1,5 @@
 {% extends 'base.html' %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.min.css">
-{% endblock %}
-
 {% block title %}{{ account.name }} - Account Details{% endblock %}
 
 {% block breadcrumb %}
@@ -20,212 +16,110 @@
 
 {% block content %}
 <div class="container-fluid">
-    <!-- Account Header -->
+    <!-- Account Summary Card -->
     <div class="card mb-4">
         <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="mb-1">{{ account.name }}</h4>
-                    <div class="text-muted">Cash Account</div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 class="mb-0">{{ account.name }}</h4>
+                    <p class="text-muted mb-0">{{ account.account_type.name }}</p>
                 </div>
-                <div>
-                    <h3 class="mb-1 text-success">₹{{ account.balance|default:"0.00" }}</h3>
-                    <div class="text-muted text-end">Current Balance</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Cards -->
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="text-muted mb-2 small">Monthly Credits</div>
-                            <h3 class="mb-0 text-success">₹{{ monthly_credits|default:"0.00" }}</h3>
-                        </div>
-                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-arrow-up text-success fa-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="text-muted mb-2 small">Monthly Debits</div>
-                            <h3 class="mb-0 text-danger">₹{{ monthly_debits|default:"0.00" }}</h3>
-                        </div>
-                        <div class="bg-danger bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-arrow-down text-danger fa-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="text-muted mb-2 small">Net Change</div>
-                            <h3 class="mb-0 {% if net_change >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                ₹{{ net_change|default:"0.00" }}
-                            </h3>
-                        </div>
-                        <div class=" bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-chart-line text-primary fa-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="text-muted mb-2 small">Transactions</div>
-                            <h3 class="mb-0">{{ transaction_count|default:"0" }}</h3>
-                        </div>
-                        <div class="bg-info bg-opacity-10 rounded-circle p-3">
-                            <i class="fas fa-receipt text-info fa-lg"></i>
-                        </div>
-                    </div>
+                <div class="col-md-6 text-md-end">
+                    <h3 class="mb-0 {% if account.balance > 0 %}text-success{% else %}text-danger{% endif %}">
+                        ₹ {{ account.balance }}
+                    </h3>
+                    <p class="text-muted mb-0">Current Balance</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Transaction Buttons -->
-    <div class="mb-4">
-        <div class="row g-2">
-            <div class="col-auto">
-                <a href="{% url 'accounts:transaction_add_receipt' account_id=account.id %}" class="btn btn-primary">
-                    <i class="bi bi-receipt me-2"></i>Add Receipt
-                </a>
+    <!-- Monthly Statistics -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Monthly Credits</h6>
+                    <h3 class="mb-0">₹ {{ monthly_stats.total_credits }}</h3>
+                </div>
             </div>
-            {% if account.level == 'pastorate' %}
-            <div class="col-auto">
-                <a href="{% url 'accounts:transaction_add_offertory' account_id=account.id %}" class="btn btn-success">
-                    <i class="bi bi-building me-2"></i>Add Church Offertory
-                </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Monthly Debits</h6>
+                    <h3 class="mb-0">₹ {{ monthly_stats.total_debits }}</h3>
+                </div>
             </div>
-            {% endif %}
-            <div class="col-auto">
-                <a href="{% url 'accounts:transaction_add_bill' account_id=account.id %}" class="btn btn-danger">
-                    <i class="bi bi-file-text me-2"></i>Add Bill/Voucher
-                </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card {% if monthly_stats.net_change >= 0 %}bg-success{% else %}bg-danger{% endif %} text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Net Change</h6>
+                    <h3 class="mb-0">₹ {{ monthly_stats.net_change }}</h3>
+                </div>
             </div>
-            {% if account.level == 'pastorate' %}
-            <div class="col-auto">
-                <a href="{% url 'accounts:transaction_add_acquittance' account_id=account.id %}" class="btn btn-info text-white">
-                    <i class="bi bi-file-earmark-text me-2"></i>Add Acquittance
-                </a>
-            </div>
-            {% endif %}
-            <div class="col-auto">
-                <a href="{% url 'accounts:transaction_add' account_id=account.id %}" class="btn btn-outline-primary">
-                    <i class="bi bi-plus-lg me-2"></i>Add Other Transaction
-                </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <h6 class="card-title">Transactions</h6>
+                    <h3 class="mb-0">{{ monthly_stats.transaction_count }}</h3>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Transactions Table -->
+    <!-- Transactions Section -->
     <div class="card">
         <div class="card-header bg-white py-3">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h5 class="mb-0">Recent Transactions</h5>
-                </div>
-                <div class="col-auto">
-                    <div class="row g-3 align-items-center">
-                        <div class="col-auto">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="searchInput" placeholder="Search transactions...">
-                                <button class="btn btn-outline-primary" type="button" onclick="filterTransactions()">
-                                    <i class="bi bi-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <select class="form-select" id="categoryFilter" onchange="filterTransactions()">
-                                <option value="">All Categories</option>
-                                {% for category in categories %}
-                                    <option value="{{ category.name }}">{{ category.name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Transactions</h5>
+                <a href="{% url 'accounts:transaction_add' account_id=account.id %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add Transaction
+                </a>
             </div>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body">
+            {% if transactions %}
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="transactionsTable">
-                    <thead class="bg-light">
+                <table class="table table-hover">
+                    <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Category</th>
-                            <th>Transaction ID</th>
+                            <th>Reference</th>
+                            <th>Description</th>
+                            <th>Type</th>
                             <th>Amount</th>
-                            <th>History</th>
-                            <th class="text-end">Actions</th>
+                            <th>Created By</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for transaction in transactions %}
                         <tr>
                             <td>{{ transaction.transaction_date|date:"d M Y" }}</td>
+                            <td>{{ transaction.reference_number }}</td>
+                            <td>{{ transaction.description }}</td>
                             <td>
-                                <span class="badge {% if transaction.details.category.transaction_type == 'debit' %}bg-danger{% else %}bg-success{% endif %}">
-                                    {{ transaction.details.category.name }}
+                                <span class="badge {% if transaction.transaction_type == 'credit' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ transaction.get_transaction_type_display }}
                                 </span>
                             </td>
-                            <td>TXN-{{ transaction.created_at|date:"YmdHis" }}</td>
-                            <td class="{% if transaction.details.category.transaction_type == 'debit' %}text-danger{% else %}text-success{% endif %}">
-                                {% if transaction.details.category.transaction_type == 'debit' %}-{% else %}+{% endif %}₹{{ transaction.amount }}
-                            </td>
+                            <td>₹ {{ transaction.amount }}</td>
+                            <td>{{ transaction.created_by.get_full_name }}</td>
                             <td>
-                                {% if transaction.updated_at and transaction.updated_at != transaction.created_at %}
-                                    <small class="text-muted">Updated: {{ transaction.updated_at|date:"d M Y H:i" }}</small>
-                                {% else %}
-                                    <small class="text-muted">Created: {{ transaction.created_at|date:"d M Y H:i" }}</small>
-                                {% endif %}
-                            </td>
-                            <td class="text-end">
                                 <div class="btn-group">
-                                    <a href="{% url 'accounts:transaction_view' pk=transaction.pk %}" class="btn btn-sm btn-light">
-                                        <i class="fas fa-eye"></i>
+                                    <a href="{% url 'accounts:transaction_edit' pk=transaction.pk %}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-edit"></i>
                                     </a>
-                                    {% if transaction.details.category.name == 'Receipts' %}
-                                        <a href="{% url 'accounts:transaction_edit_receipt' pk=transaction.pk %}" class="btn btn-sm btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    {% elif transaction.details.category.name == 'Church Offertory' %}
-                                        <a href="{% url 'accounts:transaction_edit_offertory' pk=transaction.pk %}" class="btn btn-sm btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    {% elif transaction.details.category.name == 'Bills and Vouchers' %}
-                                        <a href="{% url 'accounts:transaction_edit_bill' pk=transaction.pk %}" class="btn btn-sm btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    {% elif transaction.details.category.name == 'Acquittance' %}
-                                        <a href="{% url 'accounts:transaction_edit_acquittance' pk=transaction.pk %}" class="btn btn-sm btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    {% else %}
-                                        <a href="{% url 'accounts:transaction_edit' pk=transaction.pk %}" class="btn btn-sm btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    {% endif %}
-                                    <a href="#" onclick="deleteTransaction('{% url 'accounts:transaction_delete' pk=transaction.pk %}'); return false;" class="btn btn-sm btn-light text-danger">
+                                    <a href="{% url 'accounts:transaction_history' pk=transaction.pk %}" 
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="fas fa-history"></i>
+                                    </a>
+                                    <a href="{% url 'accounts:transaction_delete' pk=transaction.pk %}" 
+                                       class="btn btn-sm btn-outline-danger">
                                         <i class="fas fa-trash"></i>
                                     </a>
                                 </div>
@@ -235,62 +129,36 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            {% if transactions.has_other_pages %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if transactions.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ transactions.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in transactions.paginator.page_range %}
+                    <li class="page-item {% if transactions.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if transactions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ transactions.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <p class="text-muted mb-0">No transactions found.</p>
+            {% endif %}
         </div>
     </div>
 </div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                Are you sure you want to delete this transaction? This action cannot be undone.
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <a href="#" id="confirmDelete" class="btn btn-danger">Delete</a>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function filterTransactions() {
-    const searchText = document.getElementById('searchInput').value.toLowerCase();
-    const categoryFilter = document.getElementById('categoryFilter').value;
-    const table = document.getElementById('transactionsTable');
-    const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    for (let row of rows) {
-        const date = row.cells[0].textContent.toLowerCase();
-        const category = row.cells[1].textContent.toLowerCase();
-        const transactionId = row.cells[2].textContent.toLowerCase();
-        const amount = row.cells[3].textContent.toLowerCase();
-        const history = row.cells[4].textContent.toLowerCase();
-
-        const matchesSearch = date.includes(searchText) || 
-                            category.includes(searchText) || 
-                            transactionId.includes(searchText) ||
-                            amount.includes(searchText) ||
-                            history.includes(searchText);
-
-        const matchesCategory = !categoryFilter || category.includes(categoryFilter.toLowerCase());
-
-        row.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
-    }
-}
-
-function deleteTransaction(url) {
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    document.getElementById('confirmDelete').href = url;
-    modal.show();
-}
-
-// Add event listener for search input
-document.getElementById('searchInput').addEventListener('keyup', filterTransactions);
-</script>
 {% endblock %} 

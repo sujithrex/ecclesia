@@ -4,7 +4,7 @@
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
-<li class="breadcrumb-item"><a href="{% url 'web:essentials' %}">Essential Settings</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:essentials' %}">Essential Settings</a></li>
 <li class="breadcrumb-item active">Edit Category</li>
 {% endblock %}
 
@@ -42,7 +42,7 @@
                         </div>
                         
                         <div class="text-end">
-                            <a href="{% url 'web:essentials' %}" class="btn btn-secondary">Cancel</a>
+                            <a href="{% url 'congregation:essentials' %}" class="btn btn-secondary">Cancel</a>
                             <button type="submit" class="btn btn-primary">Update Category</button>
                         </div>
                     </form>

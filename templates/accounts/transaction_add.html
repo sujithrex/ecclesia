@@ -27,10 +27,9 @@
                     <form method="post" id="transactionForm">
                         {% csrf_token %}
                         
-                        {% if account.level == 'pastorate' %}
                         <div class="mb-3">
                             <label class="form-label">Transaction Category</label>
-                            <select name="category" class="form-select" required>
+                            <select name="category" class="form-select" id="categorySelect" required>
                                 <option value="">Select Category</option>
                                 {% for category in categories %}
                                 <option value="{{ category.id }}" 
@@ -42,13 +41,20 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        {% else %}
-                        <div class="mb-3">
-                            <label class="form-label">Transaction Type</label>
-                            <select name="transaction_type" class="form-select" required>
-                                <option value="">Select Type</option>
-                                <option value="credit">Credit (Add Money)</option>
-                                <option value="debit">Debit (Remove Money)</option>
+
+                        <div id="referenceNumberField" class="mb-3" style="display: none;">
+                            <label class="form-label">Reference Number</label>
+                            <input type="text" name="reference_number" class="form-control" placeholder="Enter receipt/bill/voucher number">
+                        </div>
+
+                        {% if churches %}
+                        <div id="churchField" class="mb-3" style="display: none;">
+                            <label class="form-label">Church</label>
+                            <select name="church" class="form-select">
+                                <option value="">Select Church</option>
+                                {% for church in churches %}
+                                <option value="{{ church.id }}">{{ church.church_name }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         {% endif %}
@@ -57,30 +63,13 @@
                             <label class="form-label">Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
-                                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required>
+                                <input type="number" name="amount" class="form-control" step="0.01" min="0" required>
                             </div>
-                            <div class="form-text">Enter amount in rupees (e.g., 1000.00)</div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Transaction Date</label>
                             <input type="date" name="transaction_date" class="form-control" required>
-                        </div>
-
-                        <!-- Dynamic Fields -->
-                        <div id="referenceNumberField" class="mb-3" style="display: none;">
-                            <label class="form-label">Reference Number</label>
-                            <input type="text" name="reference_number" class="form-control" placeholder="Enter receipt/bill/voucher number">
-                        </div>
-
-                        <div id="churchField" class="mb-3" style="display: none;">
-                            <label class="form-label">Select Church</label>
-                            <select name="church" class="form-select">
-                                <option value="">Select Church</option>
-                                {% for church in churches %}
-                                <option value="{{ church.id }}">{{ church.church_name }}</option>
-                                {% endfor %}
-                            </select>
                         </div>
 
                         <div class="mb-3">
@@ -104,38 +93,30 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Set default transaction date to current date
     const now = new Date();
-    document.querySelector('input[name="transaction_date"]').value = now.toISOString().split('T')[0];
+    const today = now.toISOString().split('T')[0];
+    document.querySelector('input[name="transaction_date"]').value = today;
 
-    // Handle dynamic fields based on category selection
-    const categorySelect = document.querySelector('select[name="category"]');
-    if (categorySelect) {
-        categorySelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const requiresNumber = selectedOption.dataset.requiresNumber === 'true';
-            const requiresChurch = selectedOption.dataset.requiresChurch === 'true';
-            
-            // Show/hide reference number field
-            document.getElementById('referenceNumberField').style.display = 
-                requiresNumber ? 'block' : 'none';
-            
-            // Show/hide church selection field
-            document.getElementById('churchField').style.display = 
-                requiresChurch ? 'block' : 'none';
-            
-            // Update required attributes
-            document.querySelector('input[name="reference_number"]').required = requiresNumber;
-            document.querySelector('select[name="church"]').required = requiresChurch;
-        });
-    }
+    const categorySelect = document.getElementById('categorySelect');
+    const referenceNumberField = document.getElementById('referenceNumberField');
+    const churchField = document.getElementById('churchField');
 
-    // Form validation
-    const form = document.getElementById('transactionForm');
-    form.addEventListener('submit', function(event) {
-        const amount = form.querySelector('input[name="amount"]').value;
-        if (isNaN(amount) || parseFloat(amount) <= 0) {
-            event.preventDefault();
-            alert('Please enter a valid positive amount.');
-            return false;
+    // Update form fields when category changes
+    categorySelect.addEventListener('change', function() {
+        const selectedOption = this.selectedOptions[0];
+        if (!selectedOption || !selectedOption.value) {
+            referenceNumberField.style.display = 'none';
+            if (churchField) churchField.style.display = 'none';
+            return;
+        }
+
+        // Show/hide reference number field
+        referenceNumberField.style.display = 
+            selectedOption.dataset.requiresNumber === 'true' ? 'block' : 'none';
+
+        // Show/hide church field
+        if (churchField) {
+            churchField.style.display = 
+                selectedOption.dataset.requiresChurch === 'true' ? 'block' : 'none';
         }
     });
 });
