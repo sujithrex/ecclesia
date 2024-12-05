@@ -176,6 +176,78 @@ def receipt_detail(request, pastorate_id, pk):
 @login_required
 def receipt_edit(request, pastorate_id, pk):
     pastorate = get_object_or_404(Pastorate, pk=pastorate_id)
+    transaction = get_object_or_404(
+        Transaction.objects.select_related(
+            'account',
+            'primary_category',
+            'secondary_category'
+        ),
+        pk=pk,
+        transaction_type='receipt'
+    )
+    
+    # Get all accounts from pastorate and its churches
+    accounts = Account.objects.filter(
+        Q(pastorate=pastorate) | Q(church__pastorate=pastorate)
+    ).select_related('church').order_by('name')
+    
+    # Get all families from churches in this pastorate
+    families = Family.objects.filter(area__church__pastorate=pastorate).select_related('area', 'area__church')
+    # Get all members from these families
+    members = Member.objects.filter(family__area__church__pastorate=pastorate).select_related('family')
+
+    if request.method == 'POST':
+        try:
+            # Get form data
+            account = get_object_or_404(Account, pk=request.POST.get('account'))
+            amount = Decimal(request.POST.get('amount'))
+            date = request.POST.get('date')
+            receipt_number = request.POST.get('receipt_number')
+            family_name = request.POST.get('family_name')
+            member_name = request.POST.get('member_name')
+            description = request.POST.get('description')
+            primary_category = get_object_or_404(PrimaryCategory, pk=request.POST.get('primary_category'))
+            secondary_category = get_object_or_404(SecondaryCategory, pk=request.POST.get('secondary_category'))
+
+            # Validate categories
+            if secondary_category.primary_category != primary_category:
+                raise ValueError("Selected secondary category does not belong to the selected primary category")
+
+            # Update the transaction
+            transaction.account = account
+            transaction.amount = amount
+            transaction.date = date
+            transaction.receipt_number = receipt_number
+            transaction.family_name = family_name
+            transaction.member_name = member_name
+            transaction.description = description
+            transaction.primary_category = primary_category
+            transaction.secondary_category = secondary_category
+            transaction.save()
+
+            messages.success(request, 'Receipt updated successfully.')
+            return redirect('accounts:receipt_list', pastorate_id=pastorate_id)
+        except Exception as e:
+            messages.error(request, f'Error updating receipt: {str(e)}')
+
+    # Get categories
+    primary_categories = PrimaryCategory.objects.filter(transaction_type='credit')
+    # Get all secondary categories for the current primary category and other credit categories
+    secondary_categories = SecondaryCategory.objects.filter(
+        Q(primary_category=transaction.primary_category) |
+        Q(primary_category__transaction_type='credit')
+    ).select_related('primary_category').distinct()
+
+    context = {
+        'pastorate': pastorate,
+        'transaction': transaction,
+        'accounts': accounts,
+        'families': families,
+        'members': members,
+        'primary_categories': primary_categories,
+        'secondary_categories': secondary_categories,
+    }
+    return render(request, 'accounts/transaction/receipts/edit.html', context)
 
 @login_required
 def receipt_delete(request, pastorate_id, pk):
@@ -356,8 +428,13 @@ def bill_edit(request, pastorate_id, pk):
         Q(pastorate=pastorate) | Q(church__pastorate=pastorate)
     ).select_related('church').order_by('name')
     
+    # Get categories
     primary_categories = PrimaryCategory.objects.filter(transaction_type='debit')
-    secondary_categories = SecondaryCategory.objects.filter(primary_category__transaction_type='debit')
+    # Get all secondary categories for the current primary category and other debit categories
+    secondary_categories = SecondaryCategory.objects.filter(
+        Q(primary_category=transaction.primary_category) |
+        Q(primary_category__transaction_type='debit')
+    ).select_related('primary_category').distinct()
 
     if request.method == 'POST':
         try:
@@ -586,8 +663,13 @@ def aqudence_edit(request, pastorate_id, pk):
         Q(pastorate=pastorate) | Q(church__pastorate=pastorate)
     ).select_related('church').order_by('name')
     
+    # Get categories
     primary_categories = PrimaryCategory.objects.filter(transaction_type='debit')
-    secondary_categories = SecondaryCategory.objects.filter(primary_category__transaction_type='debit')
+    # Get all secondary categories for the current primary category and other debit categories
+    secondary_categories = SecondaryCategory.objects.filter(
+        Q(primary_category=transaction.primary_category) |
+        Q(primary_category__transaction_type='debit')
+    ).select_related('primary_category').distinct()
 
     if request.method == 'POST':
         try:
@@ -809,8 +891,13 @@ def offering_edit(request, pastorate_id, pk):
         Q(pastorate=pastorate) | Q(church__pastorate=pastorate)
     ).select_related('church').order_by('name')
     
+    # Get categories
     primary_categories = PrimaryCategory.objects.filter(transaction_type='credit')
-    secondary_categories = SecondaryCategory.objects.filter(primary_category__transaction_type='credit')
+    # Get all secondary categories for the current primary category and other credit categories
+    secondary_categories = SecondaryCategory.objects.filter(
+        Q(primary_category=transaction.primary_category) |
+        Q(primary_category__transaction_type='credit')
+    ).select_related('primary_category').distinct()
 
     if request.method == 'POST':
         try:
@@ -1058,14 +1145,22 @@ def custom_debit_edit(request, pastorate_id, pk):
         except Exception as e:
             messages.error(request, f'Error updating custom debit: {str(e)}')
 
+    # Get categories
+    primary_categories = PrimaryCategory.objects.filter(transaction_type='debit')
+    # Get all secondary categories for the current primary category and other debit categories
+    secondary_categories = SecondaryCategory.objects.filter(
+        Q(primary_category=transaction.primary_category) |
+        Q(primary_category__transaction_type='debit')
+    ).select_related('primary_category').distinct()
+
     context = {
         'pastorate': pastorate,
         'transaction': transaction,
         'accounts': accounts,
-        'primary_categories': PrimaryCategory.objects.filter(transaction_type='debit'),
-        'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='debit'),
+        'primary_categories': primary_categories,
+        'secondary_categories': secondary_categories,
     }
-    return render(request, 'accounts/transaction/custom_debit/edit.html', context)
+    return render(request, 'accounts/transaction/custom/debit/edit.html', context)
 
 @login_required
 def custom_debit_delete(request, pastorate_id, pk):
@@ -1224,7 +1319,7 @@ def custom_credit_detail(request, pastorate_id, pk):
         'pastorate': pastorate,
         'transaction': transaction,
     }
-    return render(request, 'accounts/transaction/custom_credit/detail.html', context)
+    return render(request, 'accounts/transaction/custom/credit/detail.html', context)
 
 @login_required
 def custom_credit_edit(request, pastorate_id, pk):
@@ -1274,14 +1369,22 @@ def custom_credit_edit(request, pastorate_id, pk):
         except Exception as e:
             messages.error(request, f'Error updating custom credit: {str(e)}')
 
+    # Get categories
+    primary_categories = PrimaryCategory.objects.filter(transaction_type='credit')
+    # Get all secondary categories for the current primary category and other credit categories
+    secondary_categories = SecondaryCategory.objects.filter(
+        Q(primary_category=transaction.primary_category) |
+        Q(primary_category__transaction_type='credit')
+    ).select_related('primary_category').distinct()
+
     context = {
         'pastorate': pastorate,
         'transaction': transaction,
         'accounts': accounts,
-        'primary_categories': PrimaryCategory.objects.filter(transaction_type='credit'),
-        'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='credit'),
+        'primary_categories': primary_categories,
+        'secondary_categories': secondary_categories,
     }
-    return render(request, 'accounts/transaction/custom_credit/edit.html', context)
+    return render(request, 'accounts/transaction/custom/credit/edit.html', context)
 
 @login_required
 def custom_credit_delete(request, pastorate_id, pk):
