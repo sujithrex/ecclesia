@@ -31,7 +31,7 @@ def pastorate_list(request):
     context = {
         'pastorates': pastorates,
     }
-    return render(request, 'accounts/pastorate_list.html', context)
+    return render(request, 'accounts/pastorate/pastorate_list.html', context)
 
 @login_required
 def pastorate_detail(request, pk):
@@ -46,7 +46,7 @@ def pastorate_detail(request, pk):
     context = {
         'pastorate': pastorate,
     }
-    return render(request, 'accounts/pastorate_detail.html', context)
+    return render(request, 'accounts/pastorate/pastorate_detail.html', context)
 
 @login_required
 def pastorate_account_add(request, pastorate_id):
@@ -78,7 +78,7 @@ def pastorate_account_add(request, pastorate_id):
         'pastorate': pastorate,
         'account_types': account_types,
     }
-    return render(request, 'accounts/pastorate_account_add.html', context)
+    return render(request, 'accounts/pastorate/pastorate_account_add.html', context)
 
 @login_required
 def church_detail(request, pk):
@@ -92,7 +92,7 @@ def church_detail(request, pk):
     context = {
         'church': church,
     }
-    return render(request, 'accounts/church_detail.html', context)
+    return render(request, 'accounts/church/church_detail.html', context)
 
 @login_required
 def church_account_add(request, church_id):
@@ -124,7 +124,7 @@ def church_account_add(request, church_id):
         'church': church,
         'account_types': account_types,
     }
-    return render(request, 'accounts/church_account_add.html', context)
+    return render(request, 'accounts/church/church_account_add.html', context)
 
 @login_required
 def account_edit(request, pk):
@@ -151,7 +151,7 @@ def account_edit(request, pk):
         'account': account,
         'account_types': account_types,
     }
-    return render(request, 'accounts/account_edit.html', context)
+    return render(request, 'accounts/account/account_edit.html', context)
 
 @login_required
 def account_delete(request, pk):
@@ -179,7 +179,7 @@ def account_delete(request, pk):
     context = {
         'account': account,
     }
-    return render(request, 'accounts/account_delete.html', context)
+    return render(request, 'accounts/account/account_delete.html', context)
 
 # Account Type Views
 @login_required
@@ -303,7 +303,7 @@ def account_add(request):
     account_types = AccountType.objects.all().order_by('name')
     context['account_types'] = account_types
     
-    return render(request, 'accounts/account_add.html', context)
+    return render(request, 'accounts/account/account_add.html', context)
 
 @login_required
 def account_detail(request, pk):
@@ -352,7 +352,7 @@ def account_detail(request, pk):
         'monthly_stats': monthly_stats,
         'transactions': transactions,
     }
-    return render(request, 'accounts/account_detail.html', context)
+    return render(request, 'accounts/account/account_detail.html', context)
 
 # Transaction Views
 @login_required
@@ -433,7 +433,7 @@ def transaction_add(request, account_id):
         'categories': categories,
         'churches': churches,
     }
-    return render(request, 'accounts/transaction_add.html', context)
+    return render(request, 'accounts/transaction/transaction_add.html', context)
 
 @login_required
 def transaction_edit(request, pk):
@@ -530,7 +530,7 @@ def transaction_edit(request, pk):
         'categories': categories,
         'churches': churches,
     }
-    return render(request, 'accounts/transaction/edit.html', context)
+    return render(request, 'accounts/transaction/transaction_edit.html', context)
 
 @login_required
 def transaction_delete(request, pk):
@@ -548,7 +548,7 @@ def transaction_delete(request, pk):
     context = {
         'transaction': transaction,
     }
-    return render(request, 'accounts/transaction_delete.html', context)
+    return render(request, 'accounts/transaction/transaction_delete.html', context)
 
 @login_required
 def transaction_history(request, pk):
@@ -559,7 +559,7 @@ def transaction_history(request, pk):
         'transaction': transaction,
         'history': history,
     }
-    return render(request, 'accounts/transaction_history.html', context)
+    return render(request, 'accounts/transaction/transaction_history.html', context)
 
 @login_required
 def category_add(request):
