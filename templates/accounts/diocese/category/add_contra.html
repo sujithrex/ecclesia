@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit {{ category.name }}{% endblock %}
+{% block title %}Add Diocese Contra Category{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'web:essentials' %}">Essential Settings</a></li>
-<li class="breadcrumb-item active">Edit Category</li>
+<li class="breadcrumb-item active">Add Diocese Contra Category</li>
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">Edit Transaction Category</h5>
+                    <h5 class="mb-0">Add New Diocese Contra Category</h5>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -22,28 +22,32 @@
                         
                         <div class="mb-3">
                             <label class="form-label">Category Name</label>
-                            <input type="text" name="name" class="form-control" value="{{ category.name }}" required>
+                            <input type="text" name="name" class="form-control" required>
                         </div>
                         
                         <div class="mb-3">
                             <label class="form-label">Transaction Type</label>
                             <select name="transaction_type" class="form-select" required>
                                 <option value="">Select Type</option>
-                                <option value="credit" {% if category.transaction_type == 'credit' %}selected{% endif %}>Credit (Money In)</option>
-                                <option value="debit" {% if category.transaction_type == 'debit' %}selected{% endif %}>Debit (Money Out)</option>
+                                <option value="debit">Debit (Money Out)</option>
+                                <option value="credit">Credit (Money In)</option>
                             </select>
+                            <small class="text-muted">
+                                Debit: Amount will be debited from Diocese Account and credited to selected account<br>
+                                Credit: Amount will be credited to Diocese Account and debited from selected account
+                            </small>
                         </div>
                         
                         <div class="mb-3">
                             <div class="form-check">
-                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" {% if category.is_active %}checked{% endif %}>
+                                <input type="checkbox" name="is_active" class="form-check-input" id="is_active" checked>
                                 <label class="form-check-label" for="is_active">Active</label>
                             </div>
                         </div>
                         
                         <div class="text-end">
                             <a href="{% url 'web:essentials' %}" class="btn btn-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Update Category</button>
+                            <button type="submit" class="btn btn-primary">Create Category</button>
                         </div>
                     </form>
                 </div>

@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Add Transaction - {{ account.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
@@ -24,42 +29,92 @@
                     <h5 class="mb-0">Add New Transaction</h5>
                 </div>
                 <div class="card-body">
-                    <form method="post" id="transactionForm">
+                    <form method="post">
                         {% csrf_token %}
                         
-                        {% if account.level == 'pastorate' %}
                         <div class="mb-3">
                             <label class="form-label">Transaction Category</label>
-                            <select name="category" class="form-select" required>
+                            <select name="category" id="category" class="form-select" required>
                                 <option value="">Select Category</option>
                                 {% for category in categories %}
                                 <option value="{{ category.id }}" 
                                         data-type="{{ category.transaction_type }}"
+                                        data-category-type="{{ category.category_type }}"
                                         data-requires-number="{{ category.requires_number|yesno:'true,false' }}"
-                                        data-requires-church="{{ category.requires_church|yesno:'true,false' }}">
+                                        data-requires-church="{{ category.requires_church|yesno:'true,false' }}"
+                                        data-name="{{ category.name }}">
                                     {{ category.name }}
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        {% else %}
-                        <div class="mb-3">
-                            <label class="form-label">Transaction Type</label>
-                            <select name="transaction_type" class="form-select" required>
-                                <option value="">Select Type</option>
-                                <option value="credit">Credit (Add Money)</option>
-                                <option value="debit">Debit (Remove Money)</option>
-                            </select>
-                        </div>
-                        {% endif %}
 
+                        <!-- Receipt Template -->
+                        <div id="receipt-template" class="category-template" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Receipt Number</label>
+                                <input type="text" name="reference_number" class="form-control" placeholder="Enter receipt number">
+                                <div class="form-text">Enter the receipt number</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Member Reference (Optional)</label>
+                                <input type="text" id="member_search" class="form-control" placeholder="Start typing to search members...">
+                                <input type="hidden" name="member_id" id="member_id">
+                                <div class="form-text">Search by member name or family head name</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Family Reference (Optional)</label>
+                                <input type="text" id="family_search" class="form-control" placeholder="Start typing to search families...">
+                                <input type="hidden" name="family_id" id="family_id">
+                                <div class="form-text">Search by family head name or family ID</div>
+                            </div>
+                        </div>
+
+                        <!-- Church Offertory Template -->
+                        <div id="offertory-template" class="category-template" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Church</label>
+                                <select name="church" class="form-select">
+                                    <option value="">Select Church</option>
+                                    {% for church in churches %}
+                                    <option value="{{ church.id }}">{{ church.church_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Bills and Vouchers Template -->
+                        <div id="bills-template" class="category-template" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Bill/Voucher Number</label>
+                                <input type="text" name="reference_number" class="form-control" placeholder="Enter bill/voucher number">
+                                <div class="form-text">Enter the bill or voucher number</div>
+                            </div>
+                        </div>
+
+                        <!-- Acquittance Template -->
+                        <div id="acquittance-template" class="category-template" style="display: none;">
+                            <!-- No additional fields needed for acquittance -->
+                        </div>
+
+                        <!-- General Template for Custom Categories -->
+                        <div id="general-template" class="category-template" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Reference Number (Optional)</label>
+                                <input type="text" name="reference_number" class="form-control" placeholder="Enter reference number">
+                                <div class="form-text">Enter any reference number if applicable</div>
+                            </div>
+                        </div>
+
+                        <!-- Common Fields for All Categories -->
                         <div class="mb-3">
                             <label class="form-label">Amount</label>
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
-                                <input type="number" name="amount" class="form-control" step="0.01" min="0.01" required>
+                                <input type="number" name="amount" class="form-control" step="0.01" required>
                             </div>
-                            <div class="form-text">Enter amount in rupees (e.g., 1000.00)</div>
                         </div>
 
                         <div class="mb-3">
@@ -67,25 +122,9 @@
                             <input type="date" name="transaction_date" class="form-control" required>
                         </div>
 
-                        <!-- Dynamic Fields -->
-                        <div id="referenceNumberField" class="mb-3" style="display: none;">
-                            <label class="form-label">Reference Number</label>
-                            <input type="text" name="reference_number" class="form-control" placeholder="Enter receipt/bill/voucher number">
-                        </div>
-
-                        <div id="churchField" class="mb-3" style="display: none;">
-                            <label class="form-label">Select Church</label>
-                            <select name="church" class="form-select">
-                                <option value="">Select Church</option>
-                                {% for church in churches %}
-                                <option value="{{ church.id }}">{{ church.church_name }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
                         <div class="mb-3">
                             <label class="form-label">Description</label>
-                            <textarea name="description" class="form-control" rows="3" required></textarea>
+                            <textarea name="description" class="form-control" rows="3"></textarea>
                             <div class="form-text">Please provide a detailed description of the transaction.</div>
                         </div>
 
@@ -99,45 +138,121 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Set default transaction date to current date
-    const now = new Date();
-    document.querySelector('input[name="transaction_date"]').value = now.toISOString().split('T')[0];
+$(document).ready(function() {
+    try {
+        console.log('Document ready');
+        
+        // Set default transaction date to current date
+        const now = new Date();
+        const today = now.toISOString().split('T')[0];
+        $('input[name="transaction_date"]').val(today);
 
-    // Handle dynamic fields based on category selection
-    const categorySelect = document.querySelector('select[name="category"]');
-    if (categorySelect) {
-        categorySelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            const requiresNumber = selectedOption.dataset.requiresNumber === 'true';
-            const requiresChurch = selectedOption.dataset.requiresChurch === 'true';
+        const $categorySelect = $('#category');
+        const $categoryTemplates = $('.category-template');
+
+        // Update form fields when category changes
+        $categorySelect.on('change', function() {
+            const $selectedOption = $(this).find('option:selected');
             
-            // Show/hide reference number field
-            document.getElementById('referenceNumberField').style.display = 
-                requiresNumber ? 'block' : 'none';
-            
-            // Show/hide church selection field
-            document.getElementById('churchField').style.display = 
-                requiresChurch ? 'block' : 'none';
-            
-            // Update required attributes
-            document.querySelector('input[name="reference_number"]').required = requiresNumber;
-            document.querySelector('select[name="church"]').required = requiresChurch;
+            // Hide all templates first
+            $categoryTemplates.hide();
+
+            if (!$selectedOption.val()) {
+                return;
+            }
+
+            const categoryType = $selectedOption.data('category-type');
+            const categoryName = $selectedOption.data('name');
+
+            // Show appropriate template based on category type
+            switch(categoryType) {
+                case 'receipts':
+                    $('#receipt-template').show();
+                    break;
+                case 'offertory':
+                    $('#offertory-template').show();
+                    break;
+                case 'bills':
+                    $('#bills-template').show();
+                    break;
+                case 'acquittance':
+                    $('#acquittance-template').show();
+                    break;
+                default:
+                    $('#general-template').show();
+                    break;
+            }
         });
-    }
 
-    // Form validation
-    const form = document.getElementById('transactionForm');
-    form.addEventListener('submit', function(event) {
-        const amount = form.querySelector('input[name="amount"]').value;
-        if (isNaN(amount) || parseFloat(amount) <= 0) {
-            event.preventDefault();
-            alert('Please enter a valid positive amount.');
-            return false;
+        // Initialize member search autocomplete
+        $('#member_search').autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "{% url 'accounts:search_members' %}",
+                    data: {
+                        term: request.term,
+                        account_id: "{{ account.id }}"
+                    },
+                    dataType: "json",
+                    success: function(data) {
+                        const memberResults = data.results.filter(item => item.type === 'member');
+                        response(memberResults || []);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error('Search failed:', textStatus, errorThrown);
+                        response([]);
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                $('#member_id').val(ui.item.id.substring(2)); // Remove m_ prefix
+                $('#member_search').val(ui.item.label);
+                return false;
+            }
+        });
+
+        // Initialize family search autocomplete
+        $('#family_search').autocomplete({
+            source: function(request, response) {
+                $.ajax({
+                    url: "{% url 'accounts:search_members' %}",
+                    data: {
+                        term: request.term,
+                        account_id: "{{ account.id }}"
+                    },
+                    dataType: "json",
+                    success: function(data) {
+                        const familyResults = data.results.filter(item => item.type === 'family');
+                        response(familyResults || []);
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error('Search failed:', textStatus, errorThrown);
+                        response([]);
+                    }
+                });
+            },
+            minLength: 2,
+            select: function(event, ui) {
+                $('#family_id').val(ui.item.id.substring(2)); // Remove f_ prefix
+                $('#family_search').val(ui.item.label);
+                return false;
+            }
+        });
+
+        // Trigger change event on page load if category is pre-selected
+        if ($categorySelect.val()) {
+            $categorySelect.trigger('change');
         }
-    });
+    } catch (error) {
+        console.error('Error in document ready handler:', error);
+    }
 });
 </script>
 {% endblock %} 

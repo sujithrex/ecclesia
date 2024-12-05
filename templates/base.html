@@ -160,7 +160,7 @@
                     <div class="nav-section mt-3 mb-2">
                         <small class="text-muted text-uppercase px-3">Settings</small>
                     </div>
-                    <a class="nav-link {% if '/congregation/settings/essentials/' in request.path %}active{% endif %}" href="{% url 'congregation:essentials' %}">
+                    <a class="nav-link {% if '/essentials/' in request.path %}active{% endif %}" href="{% url 'web:essentials' %}">
                         <i class="fas fa-cog me-2"></i>Essentials
                     </a>
 
@@ -196,12 +196,9 @@
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <form method="post" action="{% url 'web:logout' %}" class="d-inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Logout
-                                    </button>
-                                </form>
+                                <a href="{% url 'web:logout' %}" class="dropdown-item text-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -226,6 +223,7 @@
         {% block auth_content %}{% endblock %}
     {% endif %}
 
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html> 

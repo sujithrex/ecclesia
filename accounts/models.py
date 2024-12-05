@@ -5,6 +5,8 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.conf import settings
 
 class AccountType(models.Model):
     name = models.CharField(max_length=100)
@@ -288,29 +290,168 @@ class TransactionCategory(models.Model):
         verbose_name_plural = "Transaction Categories"
 
 class TransactionDetail(models.Model):
-    transaction = models.OneToOneField(
-        Transaction,
-        on_delete=models.CASCADE,
-        related_name='details'
-    )
-    category = models.ForeignKey(
-        TransactionCategory,
-        on_delete=models.PROTECT,
-        related_name='transactions'
-    )
-    reference_number = models.CharField(
-        max_length=50, 
-        blank=True, 
-        null=True,
-        help_text="Receipt/Bill/Voucher number"
-    )
-    church = models.ForeignKey(
-        'congregation.Church',
-        on_delete=models.PROTECT,
-        related_name='offertory_transactions',
-        blank=True,
-        null=True
-    )
+    transaction = models.OneToOneField(Transaction, on_delete=models.CASCADE, related_name='details')
+    category = models.ForeignKey(TransactionCategory, on_delete=models.PROTECT, related_name='transactions')
+    reference_number = models.CharField(max_length=50, null=True, blank=True, help_text='Receipt/Bill/Voucher number')
+    church = models.ForeignKey('congregation.Church', on_delete=models.PROTECT, null=True, blank=True, related_name='offertory_transactions')
+    member = models.ForeignKey('congregation.Member', on_delete=models.PROTECT, null=True, blank=True, related_name='receipt_transactions', help_text='Optional: Select member for receipt reference')
+    family = models.ForeignKey('congregation.Family', on_delete=models.PROTECT, null=True, blank=True, related_name='receipt_transactions', help_text='Optional: Select family for receipt reference')
     
     def __str__(self):
         return f"{self.category.name} - {self.transaction.reference_number}"
+
+class DioceseCategory(models.Model):
+    """Categories specific to Diocese Account transactions"""
+    name = models.CharField(max_length=100)
+    transaction_type = models.CharField(max_length=10, choices=[('debit', 'Debit'), ('credit', 'Credit')])
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Diocese Category'
+        verbose_name_plural = 'Diocese Categories'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+class DioceseTransaction(models.Model):
+    """Diocese Account transactions"""
+    account = models.ForeignKey('Account', on_delete=models.CASCADE, related_name='diocese_transactions')
+    category = models.ForeignKey(DioceseCategory, on_delete=models.PROTECT)
+    transaction_type = models.CharField(max_length=10, choices=[('debit', 'Debit'), ('credit', 'Credit')])
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    transaction_date = models.DateField()
+    reference_number = models.CharField(max_length=50, unique=True)
+    
+    # For contra entries
+    is_contra = models.BooleanField(default=False)
+    contra_account = models.ForeignKey('Account', on_delete=models.PROTECT, null=True, blank=True, related_name='contra_transactions')
+    
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='diocese_transactions_created')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='diocese_transactions_updated', null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-transaction_date', '-created_at']
+
+    def __str__(self):
+        return f"{self.reference_number} - {self.description}"
+
+    @classmethod
+    def generate_reference_number(cls):
+        """Generate a unique reference number"""
+        current_year = timezone.now().year
+        current_month = timezone.now().month
+        
+        # Get the last transaction number for this month
+        last_transaction = cls.objects.filter(
+            created_at__year=current_year,
+            created_at__month=current_month
+        ).order_by('-reference_number').first()
+        
+        # Extract the last index or start from 0
+        if last_transaction and last_transaction.reference_number.startswith(f'DIOC-{current_year}{current_month:02d}-'):
+            try:
+                last_index = int(last_transaction.reference_number.split('-')[-1])
+            except ValueError:
+                last_index = 0
+        else:
+            last_index = 0
+        
+        # Generate new reference number
+        return f'DIOC-{current_year}{current_month:02d}-{last_index + 1:04d}'
+
+    def save(self, *args, **kwargs):
+        # Generate reference number if not set
+        if not self.reference_number:
+            self.reference_number = self.generate_reference_number()
+        
+        # If this is an existing transaction, get the old instance
+        if self.pk:
+            old_instance = DioceseTransaction.objects.get(pk=self.pk)
+            
+            # Reverse old balance changes
+            if old_instance.transaction_type == 'credit':
+                old_instance.account.balance -= old_instance.amount
+            else:
+                old_instance.account.balance += old_instance.amount
+            old_instance.account.save()
+            
+            # If it was a contra entry, reverse the contra account balance too
+            if old_instance.is_contra and old_instance.contra_account:
+                if old_instance.transaction_type == 'credit':
+                    old_instance.contra_account.balance += old_instance.amount
+                else:
+                    old_instance.contra_account.balance -= old_instance.amount
+                old_instance.contra_account.save()
+        
+        # Apply new balance changes
+        if self.transaction_type == 'credit':
+            self.account.balance += self.amount
+        else:
+            self.account.balance -= self.amount
+        self.account.save()
+        
+        # If this is a contra entry, update the contra account balance too
+        if self.is_contra and self.contra_account:
+            if self.transaction_type == 'credit':
+                self.contra_account.balance -= self.amount  # If diocese is credited, contra account is debited
+                # Create transaction record in pastorate account with unique reference
+                timestamp = timezone.now().strftime('%Y%m%d%H%M%S%f')
+                Transaction.objects.create(
+                    account=self.contra_account,
+                    transaction_type='debit',
+                    amount=self.amount,
+                    description=f"Diocese Contra Entry - {self.description}",
+                    transaction_date=self.transaction_date,
+                    created_by=self.created_by,
+                    reference_number=f"DIOC-CONTRA-{timestamp}"
+                )
+            else:
+                self.contra_account.balance += self.amount  # If diocese is debited, contra account is credited
+                # Create transaction record in pastorate account with unique reference
+                timestamp = timezone.now().strftime('%Y%m%d%H%M%S%f')
+                Transaction.objects.create(
+                    account=self.contra_account,
+                    transaction_type='credit',
+                    amount=self.amount,
+                    description=f"Diocese Contra Entry - {self.description}",
+                    transaction_date=self.transaction_date,
+                    created_by=self.created_by,
+                    reference_number=f"DIOC-CONTRA-{timestamp}"
+                )
+            self.contra_account.save()
+        
+        super().save(*args, **kwargs)
+
+# Signal to create Diocese Account when Pastorate is created
+@receiver(post_save, sender=Pastorate)
+def create_diocese_account(sender, instance, created, **kwargs):
+    if created:
+        Account.objects.create(
+            name=f"{instance.pastorate_name} Diocese Account",
+            account_type=AccountType.objects.get(name='Cash Account'),  # You might want to create a specific type
+            pastorate=instance,
+            level='pastorate',
+            account_number=f"DIO-{timezone.now().strftime('%Y%m%d%H%M%S')}",
+            is_active=True
+        )
+
+class DioceseContraCategory(models.Model):
+    name = models.CharField(max_length=100)
+    transaction_type = models.CharField(choices=[('debit', 'Debit'), ('credit', 'Credit')], max_length=10)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Diocese Contra Category'
+        verbose_name_plural = 'Diocese Contra Categories'
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name

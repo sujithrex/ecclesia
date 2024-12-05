@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit {{ category.name }}{% endblock %}
+{% block title %}Edit Diocese Contra Category{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'web:essentials' %}">Essential Settings</a></li>
-<li class="breadcrumb-item active">Edit Category</li>
+<li class="breadcrumb-item active">Edit Diocese Contra Category</li>
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-white py-3">
-                    <h5 class="mb-0">Edit Transaction Category</h5>
+                    <h5 class="mb-0">Edit Diocese Contra Category</h5>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -29,9 +29,13 @@
                             <label class="form-label">Transaction Type</label>
                             <select name="transaction_type" class="form-select" required>
                                 <option value="">Select Type</option>
-                                <option value="credit" {% if category.transaction_type == 'credit' %}selected{% endif %}>Credit (Money In)</option>
                                 <option value="debit" {% if category.transaction_type == 'debit' %}selected{% endif %}>Debit (Money Out)</option>
+                                <option value="credit" {% if category.transaction_type == 'credit' %}selected{% endif %}>Credit (Money In)</option>
                             </select>
+                            <small class="text-muted">
+                                Debit: Amount will be debited from Diocese Account and credited to selected account<br>
+                                Credit: Amount will be credited to Diocese Account and debited from selected account
+                            </small>
                         </div>
                         
                         <div class="mb-3">

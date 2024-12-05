@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Church Offertory - {{ transaction.account.name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.pastorate.id %}">{{ transaction.account.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:account_detail' pk=transaction.account.id %}">{{ transaction.account.name }}</a></li>
+<li class="breadcrumb-item active">Edit Church Offertory</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Edit Church Offertory</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Transaction Date</label>
+                            <input type="date" name="transaction_date" class="form-control" 
+                                value="{{ transaction.transaction_date|date:'Y-m-d' }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Amount</label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input type="number" name="amount" class="form-control" 
+                                    value="{{ transaction.amount }}"
+                                    step="0.01" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Church</label>
+                            <select name="church_id" class="form-select" required>
+                                <option value="">Select a church...</option>
+                                {% for church in churches %}
+                                    <option value="{{ church.id }}" {% if transaction.details.church_id == church.id %}selected{% endif %}>
+                                        {{ church.church_name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Select the church that provided the offertory</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3">{{ transaction.description }}</textarea>
+                            <div class="form-text">Please provide a detailed description of the offertory.</div>
+                        </div>
+
+                        <div class="text-end">
+                            <a href="{% url 'accounts:account_detail' pk=transaction.account.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Offertory</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

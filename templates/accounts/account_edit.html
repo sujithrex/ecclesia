@@ -24,7 +24,7 @@
                     <select name="entity_id" class="form-select" required>
                         {% for pastorate in pastorates %}
                         <option value="{{ pastorate.id }}" {% if account.pastorate.id == pastorate.id %}selected{% endif %}>
-                            {{ pastorate.name }}
+                            {{ pastorate.pastorate_name }}
                         </option>
                         {% endfor %}
                     </select>
@@ -35,7 +35,7 @@
                     <select name="entity_id" class="form-select" required>
                         {% for church in churches %}
                         <option value="{{ church.id }}" {% if account.church.id == church.id %}selected{% endif %}>
-                            {{ church.name }}
+                            {{ church.church_name }}
                         </option>
                         {% endfor %}
                     </select>
@@ -69,7 +69,11 @@
                 </div>
 
                 <div class="text-end">
-                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    {% if account.level == 'pastorate' %}
+                    <a href="{% url 'accounts:pastorate_detail' pk=account.pastorate.id %}" class="btn btn-secondary">Cancel</a>
+                    {% else %}
+                    <a href="{% url 'accounts:church_detail' pk=account.church.id %}" class="btn btn-secondary">Cancel</a>
+                    {% endif %}
                     <button type="submit" class="btn btn-primary">Update Account</button>
                 </div>
             </form>

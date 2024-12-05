@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Diocese Contra Entry{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:account_detail' pk=account.id %}">{{ account.name }}</a></li>
+<li class="breadcrumb-item active">Add Diocese Contra Entry</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Add Diocese Contra Entry</h5>
+                        <a href="{% url 'accounts:diocese_contra_category_add' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Add Contra Category
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Category</label>
+                                    <select name="category" class="form-select" required>
+                                        <option value="">Select Category</option>
+                                        {% for category in contra_categories %}
+                                            <option value="{{ category.id }}" data-type="{{ category.transaction_type }}">
+                                                {{ category.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" name="transaction_type" id="transaction_type">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">₹</span>
+                                        <input type="number" name="amount" class="form-control" step="0.01" required>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Contra Account</label>
+                                    <select name="contra_account" class="form-select" required>
+                                        <option value="">Select Account</option>
+                                        {% if cash_account %}
+                                            <option value="{{ cash_account.id }}">{{ cash_account.name }}</option>
+                                        {% endif %}
+                                        {% if bank_account %}
+                                            <option value="{{ bank_account.id }}">{{ bank_account.name }}</option>
+                                        {% endif %}
+                                    </select>
+                                    <small class="text-muted">
+                                        Select the account to transfer money to/from
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Description</label>
+                                    <textarea name="description" class="form-control" rows="3" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Date</label>
+                                    <input type="date" name="date" class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <a href="{% url 'accounts:account_detail' pk=account.id %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Add Contra Entry</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.querySelector('select[name="category"]');
+    const transactionTypeInput = document.getElementById('transaction_type');
+    
+    categorySelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const transactionType = selectedOption.getAttribute('data-type');
+        transactionTypeInput.value = transactionType;
+    });
+});
+</script>
+{% endblock %} 

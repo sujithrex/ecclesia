@@ -1,27 +1,15 @@
 {% extends 'base.html' %}
-{% load web_extras %}
 
-{% block title %}{{ account.name }} - Account Details{% endblock %}
+{% block title %}{{ account.name }} - Diocese Account Details{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
-{% if account.level == 'pastorate' %}
 <li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=account.pastorate.id %}">{{ account.pastorate.pastorate_name }}</a></li>
-{% else %}
-<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=account.church.pastorate.id %}">{{ account.church.pastorate.pastorate_name }}</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' pk=account.church.id %}">{{ account.church.church_name }}</a></li>
-{% endif %}
 <li class="breadcrumb-item active">{{ account.name }}</li>
 {% endblock %}
 
 {% block content %}
-<style>
-.bg-purple {
-    background-color: #6f42c1;
-    color: white;
-}
-</style>
 <div class="container-fluid">
     <!-- Account Summary Card -->
     <div class="card mb-4">
@@ -33,7 +21,7 @@
                 </div>
                 <div class="col-md-6 text-md-end">
                     <h3 class="mb-0 {% if account.balance > 0 %}text-success{% else %}text-danger{% endif %}">
-                        ₹ {{ account.balance }}
+                        ₹ {{ account.balance|floatformat:2 }}
                     </h3>
                     <p class="text-muted mb-0">Current Balance</p>
                 </div>
@@ -83,7 +71,7 @@
                                 ₹{{ net_change|floatformat:2 }}
                             </h3>
                         </div>
-                        <div class=" bg-opacity-10 rounded-circle p-3">
+                        <div class="bg-opacity-10 rounded-circle p-3">
                             <i class="fas fa-chart-line text-primary fa-lg"></i>
                         </div>
                     </div>
@@ -111,8 +99,7 @@
     <div class="card">
         <div class="card-header bg-white py-3">
             <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Transactions</h5>
-                {% if account.name|lower|contains:"diocese" %}
+                <h5 class="mb-0">Transactions</h5>
                 <div class="btn-group">
                     <a href="{% url 'accounts:diocese_transaction_add' account_id=account.id %}" class="btn btn-primary btn-sm">
                         <i class="fas fa-plus me-1"></i> Add Transaction
@@ -121,45 +108,16 @@
                         <i class="fas fa-exchange-alt me-1"></i> Add Contra Entry
                     </a>
                 </div>
-                {% else %}
-                <div>
-                    <a href="{% url 'accounts:transaction_add_receipt' account_id=account.id %}" class="btn btn-primary">Add Receipt</a>
-                    <a href="{% url 'accounts:transaction_add_offertory' account_id=account.id %}" class="btn btn-success">Add Church Offertory</a>
-                    <a href="{% url 'accounts:transaction_add_bill' account_id=account.id %}" class="btn btn-danger">Add Bill/Voucher</a>
-                    <a href="{% url 'accounts:transaction_add_acquittance' account_id=account.id %}" class="btn btn-info">Add Acquittance</a>
-                    <a href="{% url 'accounts:transaction_add' account_id=account.id %}" class="btn btn-secondary">Add Other Transaction</a>
-                </div>
-                {% endif %}
             </div>
         </div>
         <div class="card-body">
             {% if transactions %}
-            <!-- Search and Filter -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Search transactions..." id="searchInput">
-                        <button class="btn btn-outline-secondary" type="button">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <select class="form-select d-inline-block w-auto" id="categoryFilter">
-                        <option value="">All Categories</option>
-                        {% for category in categories %}
-                        <option value="{{ category.name }}">{{ category.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            
             <div class="table-responsive">
                 <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Date</th>
-                            <th>Category</th>
+                            <th>Reference</th>
                             <th>Description</th>
                             <th>Type</th>
                             <th>Amount</th>
@@ -170,31 +128,21 @@
                         {% for transaction in transactions %}
                         <tr>
                             <td>{{ transaction.transaction_date|date:"d M Y" }}</td>
-                            <td>
-                                {% if transaction.details %}
-                                    {{ transaction.details.category.name }}
-                                {% else %}
-                                    <span class="badge bg-secondary">CONTRA</span>
-                                {% endif %}
-                            </td>
+                            <td>{{ transaction.reference_number }}</td>
                             <td>
                                 {{ transaction.description }}
+                                {% if transaction.is_contra %}
+                                <span class="badge bg-info ms-1">Contra</span>
+                                {% endif %}
                             </td>
                             <td>
-                                {% if transaction.details %}
-                                    <span class="badge {% if transaction.details.category.transaction_type == 'credit' %}bg-success{% else %}bg-danger{% endif %}">
-                                        {{ transaction.details.category.transaction_type|title }}
-                                    </span>
-                                {% else %}
-                                    <span class="badge {% if transaction.transaction_type == 'credit' %}bg-primary{% else %}bg-purple{% endif %}">
-                                        {{ transaction.transaction_type|title }}
-                                    </span>
-                                {% endif %}
+                                <span class="badge {% if transaction.transaction_type == 'credit' %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ transaction.transaction_type|title }}
+                                </span>
                             </td>
                             <td>₹ {{ transaction.amount|floatformat:2 }}</td>
                             <td>
                                 <div class="btn-group">
-                                    {% if is_diocese_account %}
                                     <a href="{% url 'accounts:diocese_transaction_view' pk=transaction.id %}" class="btn btn-sm btn-outline-info">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -204,14 +152,6 @@
                                     <a href="{% url 'accounts:diocese_transaction_delete' pk=transaction.id %}" class="btn btn-sm btn-outline-danger">
                                         <i class="fas fa-trash"></i>
                                     </a>
-                                    {% else %}
-                                    <a href="{% url 'accounts:transaction_edit' pk=transaction.id %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'accounts:transaction_delete' pk=transaction.id %}" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                    {% endif %}
                                 </div>
                             </td>
                         </tr>

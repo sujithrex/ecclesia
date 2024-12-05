@@ -4,9 +4,8 @@
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
-<li class="breadcrumb-item">Settings</li>
-<li class="breadcrumb-item"><a href="{% url 'congregation:relation_list' %}">Relations</a></li>
-<li class="breadcrumb-item active">Add</li>
+<li class="breadcrumb-item"><a href="{% url 'web:essentials' %}">Settings</a></li>
+<li class="breadcrumb-item active">Add Relation</li>
 {% endblock %}
 
 {% block content %}
@@ -14,22 +13,21 @@
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Add New Relation</h5>
+                </div>
                 <div class="card-body">
-                    <h3 class="card-title mb-4">Add New Relation</h3>
                     <form method="post">
                         {% csrf_token %}
+                        
                         <div class="mb-3">
-                            <label for="name" class="form-label">Relation Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                            <div class="form-text">Enter the relation (e.g., Father, Mother, Son, Daughter, etc.)</div>
+                            <label class="form-label">Relation Name</label>
+                            <input type="text" name="name" class="form-control" required>
                         </div>
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{% url 'congregation:relation_list' %}" class="btn btn-light">
-                                <i class="fas fa-times me-2"></i>Cancel
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Save Relation
-                            </button>
+                        
+                        <div class="text-end">
+                            <a href="{% url 'web:essentials' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Create Relation</button>
                         </div>
                     </form>
                 </div>

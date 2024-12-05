@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Transaction - {{ transaction.account.name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+{% if transaction.account.level == 'pastorate' %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.pastorate.id %}">{{ transaction.account.pastorate.pastorate_name }}</a></li>
+{% else %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=transaction.account.church.pastorate.id %}">{{ transaction.account.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' pk=transaction.account.church.id %}">{{ transaction.account.church.church_name }}</a></li>
+{% endif %}
+<li class="breadcrumb-item"><a href="{% url 'accounts:account_detail' pk=transaction.account.id %}">{{ transaction.account.name }}</a></li>
+<li class="breadcrumb-item active">View Transaction</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Transaction Details Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Transaction Details</h5>
+                        <div class="btn-group">
+                            <a href="{% url 'accounts:transaction_edit' pk=transaction.pk %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </a>
+                            <a href="{% url 'accounts:transaction_delete' pk=transaction.pk %}" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Category</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge {% if transaction.transaction_type == 'credit' %}bg-success{% else %}bg-danger{% endif %}">
+                                        {{ transaction.details.category.name }}
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-4">Amount</dt>
+                                <dd class="col-sm-8">
+                                    <span class="{% if transaction.transaction_type == 'credit' %}text-success{% else %}text-danger{% endif %}">
+                                        {% if transaction.transaction_type == 'credit' %}+{% else %}-{% endif %}₹{{ transaction.amount }}
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-4">Date</dt>
+                                <dd class="col-sm-8">{{ transaction.transaction_date|date:"d M Y" }}</dd>
+
+                                {% if transaction.details.reference_number %}
+                                <dt class="col-sm-4">Reference</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-secondary">{{ transaction.details.reference_number }}</span>
+                                </dd>
+                                {% endif %}
+
+                                {% if transaction.details.church %}
+                                <dt class="col-sm-4">Church</dt>
+                                <dd class="col-sm-8">{{ transaction.details.church.church_name }}</dd>
+                                {% endif %}
+
+                                {% if transaction.details.member %}
+                                <dt class="col-sm-4">Member</dt>
+                                <dd class="col-sm-8">
+                                    {{ transaction.details.member.respect.name }} 
+                                    {{ transaction.details.member.initial }} 
+                                    {{ transaction.details.member.name }}
+                                </dd>
+                                {% endif %}
+
+                                {% if transaction.details.family %}
+                                <dt class="col-sm-4">Family</dt>
+                                <dd class="col-sm-8">
+                                    {{ transaction.details.family.respect.name }} 
+                                    {{ transaction.details.family.initial }} 
+                                    {{ transaction.details.family.family_head }}'s Family
+                                </dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Created By</dt>
+                                <dd class="col-sm-8">{{ transaction.created_by.get_full_name }}</dd>
+
+                                <dt class="col-sm-4">Created At</dt>
+                                <dd class="col-sm-8">{{ transaction.created_at|date:"d M Y H:i" }}</dd>
+
+                                <dt class="col-sm-4">Last Updated</dt>
+                                <dd class="col-sm-8">{{ transaction.updated_at|date:"d M Y H:i" }}</dd>
+
+                                <dt class="col-sm-4">Description</dt>
+                                <dd class="col-sm-8">{{ transaction.description|default:"No description provided" }}</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History Card -->
+            {% if history %}
+            <div class="card">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">Transaction History</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Modified By</th>
+                                    <th>Changes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in history %}
+                                <tr>
+                                    <td>{{ record.modified_at|date:"d M Y H:i" }}</td>
+                                    <td>{{ record.modified_by.get_full_name }}</td>
+                                    <td>
+                                        <ul class="list-unstyled mb-0">
+                                            {% if record.amount != transaction.amount %}
+                                            <li>Amount changed from ₹{{ record.amount }} to ₹{{ transaction.amount }}</li>
+                                            {% endif %}
+                                            {% if record.description != transaction.description %}
+                                            <li>Description updated</li>
+                                            {% endif %}
+                                            {% if record.transaction_date != transaction.transaction_date %}
+                                            <li>Date changed from {{ record.transaction_date|date:"d M Y" }} to {{ transaction.transaction_date|date:"d M Y" }}</li>
+                                            {% endif %}
+                                        </ul>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 
