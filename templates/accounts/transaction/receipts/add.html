@@ -2,6 +2,32 @@
 
 {% block title %}New Receipt - {{ pastorate.pastorate_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .chosen-container {
+        width: 100% !important;
+    }
+    .chosen-container-single .chosen-single {
+        height: 38px;
+        line-height: 36px;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        box-shadow: none;
+    }
+    .chosen-container-single .chosen-single div b {
+        margin-top: 7px;
+    }
+    .chosen-container-active .chosen-single {
+        border-color: #922D50;
+        box-shadow: 0 0 0 0.25rem rgba(146, 45, 80, 0.25);
+    }
+    .chosen-container .chosen-results li.highlighted {
+        background: #922D50;
+    }
+</style>
+{% endblock %}
+
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
@@ -91,8 +117,8 @@
                 <!-- Family/Member Details -->
                 <div class="col-md-6">
                     <label for="family_name" class="form-label">Family Name</label>
-                    <select class="form-select" id="family_name" name="family_name">
-                        <option value="">Select Family</option>
+                    <select class="form-select chosen-select" id="family_name" name="family_name" data-placeholder="Select Family">
+                        <option value=""></option>
                         {% for family in families %}
                         <option value="{{ family.family_head }}">{{ family.respect.name }} {{ family.initial }} {{ family.family_head }} ({{ family.area.church.church_name }})</option>
                         {% endfor %}
@@ -100,8 +126,8 @@
                 </div>
                 <div class="col-md-6">
                     <label for="member_name" class="form-label">Member Name</label>
-                    <select class="form-select" id="member_name" name="member_name">
-                        <option value="">Select Member</option>
+                    <select class="form-select chosen-select" id="member_name" name="member_name" data-placeholder="Select Member">
+                        <option value=""></option>
                         {% for member in members %}
                         <option value="{{ member.name }}" data-family="{{ member.family.family_head }}">{{ member.respect.name }} {{ member.initial }} {{ member.name }}</option>
                         {% endfor %}
@@ -133,6 +159,12 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Chosen
+    $('.chosen-select').chosen({
+        allow_single_deselect: true,
+        width: '100%'
+    });
+
     // Family/Member filtering
     const familySelect = document.getElementById('family_name');
     const memberSelect = document.getElementById('member_name');
@@ -143,31 +175,22 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedFamily = familySelect.value;
         
         // Reset member select
-        memberSelect.innerHTML = '<option value="">Select Member</option>';
-        
-        // If no family is selected, disable member select
-        if (!selectedFamily) {
-            memberSelect.disabled = true;
-            return;
-        }
-        
-        // Enable member select
-        memberSelect.disabled = false;
+        $('#member_name').empty().append('<option value=""></option>');
         
         // Filter and add relevant members
         memberOptions.forEach(option => {
             if (!option.value) return; // Skip the placeholder option
-            if (option.dataset.family === selectedFamily) {
-                memberSelect.add(option.cloneNode(true));
+            if (!selectedFamily || option.dataset.family === selectedFamily) {
+                $('#member_name').append(option.cloneNode(true));
             }
         });
+        
+        // Update Chosen
+        $('#member_name').trigger('chosen:updated');
     }
 
-    // Initial filter for members
-    filterMembers();
-
     // Add event listener for family select changes
-    familySelect.addEventListener('change', filterMembers);
+    $('#family_name').on('change', filterMembers);
 
     // Category filtering
     const primarySelect = document.getElementById('primary_category');

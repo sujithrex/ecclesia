@@ -2,6 +2,32 @@
 
 {% block title %}Edit Receipt - {{ pastorate.pastorate_name }}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .chosen-container {
+        width: 100% !important;
+    }
+    .chosen-container-single .chosen-single {
+        height: 38px;
+        line-height: 36px;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        box-shadow: none;
+    }
+    .chosen-container-single .chosen-single div b {
+        margin-top: 7px;
+    }
+    .chosen-container-active .chosen-single {
+        border-color: #922D50;
+        box-shadow: 0 0 0 0.25rem rgba(146, 45, 80, 0.25);
+    }
+    .chosen-container .chosen-results li.highlighted {
+        background: #922D50;
+    }
+</style>
+{% endblock %}
+
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
@@ -97,11 +123,25 @@
                 <!-- Family/Member Details -->
                 <div class="col-md-6">
                     <label for="family_name" class="form-label">Family Name</label>
-                    <input type="text" class="form-control" id="family_name" name="family_name" value="{{ transaction.family_name }}">
+                    <select class="form-select chosen-select" id="family_name" name="family_name" data-placeholder="Select Family">
+                        <option value=""></option>
+                        {% for family in families %}
+                        <option value="{{ family.family_head }}" {% if family.family_head == transaction.family_name %}selected{% endif %}>
+                            {{ family.respect.name }} {{ family.initial }} {{ family.family_head }} ({{ family.area.church.church_name }})
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-6">
                     <label for="member_name" class="form-label">Member Name</label>
-                    <input type="text" class="form-control" id="member_name" name="member_name" value="{{ transaction.member_name }}">
+                    <select class="form-select chosen-select" id="member_name" name="member_name" data-placeholder="Select Member">
+                        <option value=""></option>
+                        {% for member in members %}
+                        <option value="{{ member.name }}" data-family="{{ member.family.family_head }}" {% if member.name == transaction.member_name %}selected{% endif %}>
+                            {{ member.respect.name }} {{ member.initial }} {{ member.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <!-- Description -->
@@ -124,17 +164,58 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle primary category change to filter secondary categories
+    // Initialize Chosen
+    $('.chosen-select').chosen({
+        allow_single_deselect: true,
+        width: '100%'
+    });
+
+    // Family/Member filtering
+    const familySelect = document.getElementById('family_name');
+    const memberSelect = document.getElementById('member_name');
+    const memberOptions = Array.from(memberSelect.options);
+    const currentMemberName = '{{ transaction.member_name }}';
+
+    // Function to filter members based on selected family
+    function filterMembers() {
+        const selectedFamily = familySelect.value;
+        
+        // Reset member select
+        $('#member_name').empty().append('<option value=""></option>');
+        
+        // Filter and add relevant members
+        memberOptions.forEach(option => {
+            if (!option.value) return; // Skip the placeholder option
+            if (!selectedFamily || option.dataset.family === selectedFamily) {
+                const newOption = option.cloneNode(true);
+                if (option.value === currentMemberName) {
+                    newOption.selected = true;
+                }
+                $('#member_name').append(newOption);
+            }
+        });
+        
+        // Update Chosen
+        $('#member_name').trigger('chosen:updated');
+    }
+
+    // Add event listener for family select changes
+    $('#family_name').on('change', filterMembers);
+
+    // Category filtering
     const primarySelect = document.getElementById('primary_category');
     const secondarySelect = document.getElementById('secondary_category');
     const secondaryOptions = Array.from(secondarySelect.options);
     const currentSecondaryId = '{{ transaction.secondary_category.id }}';
 
-    primarySelect.addEventListener('change', function() {
-        const selectedPrimary = this.value;
+    // Function to filter secondary categories based on selected primary category
+    function filterCategories() {
+        const selectedPrimary = primarySelect.value;
         
         // Reset secondary category select
         secondarySelect.innerHTML = '<option value="">Select Subcategory</option>';
@@ -151,7 +232,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-    });
+    }
+
+    // Initial filter for categories
+    filterCategories();
+
+    // Add event listener for primary category changes
+    primarySelect.addEventListener('change', filterCategories);
 });
 </script>
 {% endblock %} 

@@ -192,9 +192,16 @@ def receipt_edit(request, pastorate_id, pk):
     ).select_related('church').order_by('name')
     
     # Get all families from churches in this pastorate
-    families = Family.objects.filter(area__church__pastorate=pastorate).select_related('area', 'area__church')
+    families = Family.objects.filter(area__church__pastorate=pastorate).select_related('area', 'area__church', 'respect')
     # Get all members from these families
-    members = Member.objects.filter(family__area__church__pastorate=pastorate).select_related('family')
+    members = Member.objects.filter(family__area__church__pastorate=pastorate).select_related('family', 'respect')
+    
+    # Get categories
+    primary_categories = PrimaryCategory.objects.filter(transaction_type='credit')
+    secondary_categories = SecondaryCategory.objects.filter(
+        Q(primary_category=transaction.primary_category) |
+        Q(primary_category__transaction_type='credit')
+    ).select_related('primary_category').distinct()
 
     if request.method == 'POST':
         try:
@@ -229,14 +236,6 @@ def receipt_edit(request, pastorate_id, pk):
             return redirect('accounts:receipt_list', pastorate_id=pastorate_id)
         except Exception as e:
             messages.error(request, f'Error updating receipt: {str(e)}')
-
-    # Get categories
-    primary_categories = PrimaryCategory.objects.filter(transaction_type='credit')
-    # Get all secondary categories for the current primary category and other credit categories
-    secondary_categories = SecondaryCategory.objects.filter(
-        Q(primary_category=transaction.primary_category) |
-        Q(primary_category__transaction_type='credit')
-    ).select_related('primary_category').distinct()
 
     context = {
         'pastorate': pastorate,
@@ -809,6 +808,9 @@ def offering_add(request, pastorate_id):
         Q(pastorate=pastorate) | Q(church__pastorate=pastorate)
     ).select_related('church').order_by('name')
     
+    # Get churches in this pastorate
+    churches = Church.objects.filter(pastorate=pastorate).order_by('church_name')
+    
     primary_categories = PrimaryCategory.objects.filter(transaction_type='credit')
     secondary_categories = SecondaryCategory.objects.filter(primary_category__transaction_type='credit')
 
@@ -822,6 +824,7 @@ def offering_add(request, pastorate_id):
             description = request.POST.get('description')
             primary_category = get_object_or_404(PrimaryCategory, pk=request.POST.get('primary_category'))
             secondary_category = get_object_or_404(SecondaryCategory, pk=request.POST.get('secondary_category'))
+            church = get_object_or_404(Church, pk=request.POST.get('church'))
 
             # Validate categories
             if secondary_category.primary_category != primary_category:
@@ -837,6 +840,7 @@ def offering_add(request, pastorate_id):
                 transaction_type='offering',
                 primary_category=primary_category,
                 secondary_category=secondary_category,
+                church=church,
                 created_by=request.user
             )
 
@@ -848,6 +852,7 @@ def offering_add(request, pastorate_id):
     context = {
         'pastorate': pastorate,
         'accounts': accounts,
+        'churches': churches,
         'primary_categories': primary_categories,
         'secondary_categories': secondary_categories,
         'today': timezone.now()
