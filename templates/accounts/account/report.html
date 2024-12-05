@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load account_tags %}
+
+{% block title %}{{ account.name }} - Trading and Profit & Loss Account{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Report Header -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <h4 class="mb-1">{{ account.name }}</h4>
+                <p class="text-muted mb-0">Trading and Profit & Loss Account</p>
+                <p class="text-muted">as on {{ end_date|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trading and P&L Account -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <tr>
+                        <th class="bg-light" style="width: 35%">Particulars</th>
+                        <th class="bg-light text-end" style="width: 15%">Amount (₹)</th>
+                        <th class="bg-light" style="width: 35%">Particulars</th>
+                        <th class="bg-light text-end" style="width: 15%">Amount (₹)</th>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="align-top">
+                            <!-- Expenses Side -->
+                            {% for category, transactions in expense_categories.items %}
+                                {% if transactions %}
+                                    <div class="mb-2">
+                                        <strong>{{ category }}</strong>
+                                        {% for trans in transactions %}
+                                        <div class="d-flex justify-content-between">
+                                            <span class="ps-3">{{ trans.description }}</span>
+                                            <span>{{ trans.amount }}</span>
+                                        </div>
+                                        {% endfor %}
+                                        <div class="d-flex justify-content-between border-top">
+                                            <strong class="ps-3">Total {{ category }}</strong>
+                                            <strong>{{ expense_totals|get:category }}</strong>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if net_balance > 0 %}
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Net Profit</strong>
+                                    <strong>{{ net_balance }}</strong>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td colspan="2" class="align-top">
+                            <!-- Income Side -->
+                            {% for category, transactions in income_categories.items %}
+                                {% if transactions %}
+                                    <div class="mb-2">
+                                        <strong>{{ category }}</strong>
+                                        {% for trans in transactions %}
+                                        <div class="d-flex justify-content-between">
+                                            <span class="ps-3">{{ trans.description }}</span>
+                                            <span>{{ trans.amount }}</span>
+                                        </div>
+                                        {% endfor %}
+                                        <div class="d-flex justify-content-between border-top">
+                                            <strong class="ps-3">Total {{ category }}</strong>
+                                            <strong>{{ income_totals|get:category }}</strong>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if net_balance < 0 %}
+                            <div class="mt-3">
+                                <div class="d-flex justify-content-between">
+                                    <strong>Net Loss</strong>
+                                    <strong>{{ net_balance|abs_value }}</strong>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr class="table-light">
+                        <th class="text-end">Total</th>
+                        <th class="text-end">{{ total_expenses|add:net_balance|default:"0" }}</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-end">{{ total_income|default:"0" }}</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Print Button -->
+    <div class="text-end mt-4">
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print me-1"></i> Print Report
+        </button>
+    </div>
+</div>
+{% endblock %} 

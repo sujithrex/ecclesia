@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Receipt Details - {{ pastorate.pastorate_name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pastorate.id %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:receipt_list' pastorate.id %}">Receipts</a></li>
+<li class="breadcrumb-item active">Receipt Details</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0">Receipt Details</h4>
+            <p class="text-muted mb-0">View receipt transaction information</p>
+        </div>
+        <div class="btn-group">
+            <a href="{% url 'accounts:receipt_edit' pastorate.id transaction.id %}" class="btn btn-primary">
+                <i class="fas fa-edit me-1"></i> Edit Receipt
+            </a>
+            <a href="{% url 'accounts:receipt_delete' pastorate.id transaction.id %}" class="btn btn-danger">
+                <i class="fas fa-trash me-1"></i> Delete Receipt
+            </a>
+        </div>
+    </div>
+
+    <!-- Receipt Details -->
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <!-- Basic Details -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="card-title mb-4">Basic Details</h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="ps-0" style="width: 150px;">Receipt Number:</th>
+                            <td>{{ transaction.receipt_number }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Date:</th>
+                            <td>{{ transaction.date }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Amount:</th>
+                            <td>₹ {{ transaction.amount }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Account:</th>
+                            <td>
+                                {% if transaction.account.level == 'church' %}
+                                    {{ transaction.account.name }} ({{ transaction.account.church.church_name }})
+                                {% else %}
+                                    {{ transaction.account.name }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Category Details -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="card-title mb-4">Category Information</h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="ps-0" style="width: 150px;">Primary Category:</th>
+                            <td>
+                                <span class="badge bg-primary">{{ transaction.primary_category.name }}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Secondary Category:</th>
+                            <td>
+                                <span class="badge bg-secondary">{{ transaction.secondary_category.name }}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Family/Member Details -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="card-title mb-4">Family/Member Information</h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="ps-0" style="width: 150px;">Family Name:</th>
+                            <td>{{ transaction.family_name|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Member Name:</th>
+                            <td>{{ transaction.member_name|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Additional Information -->
+                <div class="col-md-6 mb-4">
+                    <h5 class="card-title mb-4">Additional Information</h5>
+                    <table class="table table-borderless">
+                        <tr>
+                            <th class="ps-0" style="width: 150px;">Created By:</th>
+                            <td>{{ transaction.created_by.get_full_name }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Created On:</th>
+                            <td>{{ transaction.created_at }}</td>
+                        </tr>
+                        <tr>
+                            <th class="ps-0">Last Updated:</th>
+                            <td>{{ transaction.updated_at }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Description -->
+                {% if transaction.description %}
+                <div class="col-12">
+                    <h5 class="card-title mb-4">Description</h5>
+                    <p class="mb-0">{{ transaction.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-4 pt-3 border-top">
+                <a href="{% url 'accounts:receipt_list' pastorate.id %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Receipts
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.table th {
+    font-weight: 600;
+    color: #6c757d;
+}
+.badge {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+</style>
+{% endblock %} 

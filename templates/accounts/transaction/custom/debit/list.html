@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+{% block title %}Custom Debits - {{ pastorate.pastorate_name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pastorate.id %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item active">Custom Debits</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0">Custom Debits</h4>
+            <p class="text-muted mb-0">Manage custom debit transactions</p>
+        </div>
+        <a href="{% url 'accounts:custom_debit_add' pastorate.id %}" class="btn btn-danger">
+            <i class="fas fa-plus me-1"></i> Create Debit
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <label for="search" class="form-label">Search</label>
+                    <input type="text" class="form-control" id="search" name="search" value="{{ search_query }}" placeholder="Search debits...">
+                </div>
+                <div class="col-md-2">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="col-md-2">
+                    <label for="account" class="form-label">Account</label>
+                    <select class="form-select" id="account" name="account">
+                        <option value="">All Accounts</option>
+                        {% for account in accounts %}
+                        <option value="{{ account.id }}" {% if selected_account == account.id|stringformat:"s" %}selected{% endif %}>
+                            {{ account.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="primary_category" class="form-label">Primary Category</label>
+                    <select class="form-select" id="primary_category" name="primary_category">
+                        <option value="">All Categories</option>
+                        {% for category in primary_categories %}
+                        <option value="{{ category.id }}" {% if selected_primary_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="secondary_category" class="form-label">Secondary Category</label>
+                    <select class="form-select" id="secondary_category" name="secondary_category">
+                        <option value="">All Subcategories</option>
+                        {% for category in secondary_categories %}
+                        <option value="{{ category.id }}" {% if selected_secondary_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-filter me-1"></i> Apply Filters
+                    </button>
+                    <a href="{% url 'accounts:custom_debit_list' pastorate.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Debits List -->
+    {% if debits %}
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Date</th>
+                        <th>Reference #</th>
+                        <th>Category</th>
+                        <th>Account</th>
+                        <th>Amount</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for debit in debits %}
+                    <tr>
+                        <td>{{ debit.date }}</td>
+                        <td>{{ debit.reference_number }}</td>
+                        <td>
+                            <span class="badge bg-danger mb-1 d-block">{{ debit.primary_category.name }}</span>
+                            <small class="text-muted">{{ debit.secondary_category.name }}</small>
+                        </td>
+                        <td>{{ debit.account.name }}</td>
+                        <td>₹ {{ debit.amount }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'accounts:custom_debit_detail' pastorate.id debit.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'accounts:custom_debit_edit' pastorate.id debit.id %}" class="btn btn-sm btn-outline-secondary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'accounts:custom_debit_delete' pastorate.id debit.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if debits.has_other_pages %}
+        <div class="card-footer bg-white">
+            <nav>
+                <ul class="pagination justify-content-center mb-0">
+                    {% if debits.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ debits.previous_page_number }}&search={{ search_query }}&start_date={{ start_date }}&end_date={{ end_date }}&account={{ selected_account }}&primary_category={{ selected_primary_category }}&secondary_category={{ selected_secondary_category }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in debits.paginator.page_range %}
+                    {% if debits.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > debits.number|add:'-3' and num < debits.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}&search={{ search_query }}&start_date={{ start_date }}&end_date={{ end_date }}&account={{ selected_account }}&primary_category={{ selected_primary_category }}&secondary_category={{ selected_secondary_category }}">
+                            {{ num }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if debits.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ debits.next_page_number }}&search={{ search_query }}&start_date={{ start_date }}&end_date={{ end_date }}&account={{ selected_account }}&primary_category={{ selected_primary_category }}&secondary_category={{ selected_secondary_category }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i> No debits found matching your criteria.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle primary category change to filter secondary categories
+    const primarySelect = document.getElementById('primary_category');
+    const secondarySelect = document.getElementById('secondary_category');
+    const secondaryOptions = Array.from(secondarySelect.options);
+
+    primarySelect.addEventListener('change', function() {
+        const selectedPrimary = this.value;
+        
+        // Reset secondary category select
+        secondarySelect.innerHTML = '<option value="">All Subcategories</option>';
+        
+        if (selectedPrimary) {
+            // Filter and add relevant secondary categories
+            secondaryOptions.forEach(option => {
+                if (option.dataset.primaryId === selectedPrimary) {
+                    secondarySelect.add(option.cloneNode(true));
+                }
+            });
+        } else {
+            // Add all secondary categories back
+            secondaryOptions.forEach(option => {
+                secondarySelect.add(option.cloneNode(true));
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 

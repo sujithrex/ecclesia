@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}New Aqudence - {{ pastorate.pastorate_name }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pastorate.id %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:aqudence_list' pastorate.id %}">Aqudence</a></li>
+<li class="breadcrumb-item active">New Aqudence</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="mb-4">
+        <h4 class="mb-0">Create New Aqudence</h4>
+        <p class="text-muted">Enter aqudence details below</p>
+    </div>
+
+    <!-- Aqudence Form -->
+    <div class="card">
+        <div class="card-body">
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                
+                <!-- Basic Details -->
+                <div class="col-md-6">
+                    <label for="reference_number" class="form-label">Reference Number <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="reference_number" name="reference_number" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="date" class="form-label">Date <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="date" name="date" value="{{ today|date:'Y-m-d' }}" required>
+                </div>
+
+                <!-- Amount and Account -->
+                <div class="col-md-6">
+                    <label for="amount" class="form-label">Amount (₹) <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" id="amount" name="amount" step="0.01" min="0" required>
+                </div>
+                <div class="col-md-6">
+                    <label for="account" class="form-label">Account <span class="text-danger">*</span></label>
+                    <select class="form-select" id="account" name="account" required>
+                        <option value="">Select Account</option>
+                        {% if accounts %}
+                            {% with pastorate_accounts=accounts|dictsortreversed:"level"|dictsort:"name" %}
+                            <optgroup label="Pastorate Accounts" class="fw-bold">
+                                {% for account in pastorate_accounts %}
+                                    {% if account.level == 'pastorate' %}
+                                        <option value="{{ account.id }}" {% if account.id == selected_account %}selected{% endif %}>
+                                            {{ account.name }} - {{ account.account_type.name }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="LCF Accounts" class="fw-bold">
+                                {% for account in pastorate_accounts %}
+                                    {% if account.level == 'church' %}
+                                        <option value="{{ account.id }}" {% if account.id == selected_account %}selected{% endif %}>
+                                            {{ account.church.church_name }} - {{ account.name }} ({{ account.account_type.name }})
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </optgroup>
+                            {% endwith %}
+                        {% endif %}
+                    </select>
+                </div>
+
+                <!-- Categories -->
+                <div class="col-md-6">
+                    <label for="primary_category" class="form-label">Primary Category <span class="text-danger">*</span></label>
+                    <select class="form-select" id="primary_category" name="primary_category" required>
+                        <option value="">Select Category</option>
+                        {% for category in primary_categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="secondary_category" class="form-label">Secondary Category <span class="text-danger">*</span></label>
+                    <select class="form-select" id="secondary_category" name="secondary_category" required>
+                        <option value="">Select Subcategory</option>
+                        {% for category in secondary_categories %}
+                        <option value="{{ category.id }}" data-primary-id="{{ category.primary_category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div class="col-12">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="col-12">
+                    <hr>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-save me-1"></i> Create Aqudence
+                    </button>
+                    <a href="{% url 'accounts:aqudence_list' pastorate.id %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle primary category change to filter secondary categories
+    const primarySelect = document.getElementById('primary_category');
+    const secondarySelect = document.getElementById('secondary_category');
+    const secondaryOptions = Array.from(secondarySelect.options);
+
+    primarySelect.addEventListener('change', function() {
+        const selectedPrimary = this.value;
+        
+        // Reset secondary category select
+        secondarySelect.innerHTML = '<option value="">Select Subcategory</option>';
+        
+        if (selectedPrimary) {
+            // Filter and add relevant secondary categories
+            secondaryOptions.forEach(option => {
+                if (option.dataset.primaryId === selectedPrimary) {
+                    secondarySelect.add(option.cloneNode(true));
+                }
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 

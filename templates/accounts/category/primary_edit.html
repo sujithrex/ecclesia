@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Primary Category - Accounts{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Accounts Dashboard</a></li>
+<li class="breadcrumb-item active">Edit Primary Category</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Edit Primary Category</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" name="name" class="form-control" value="{{ category.name }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3">{{ category.description }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Transaction Type</label>
+                    <select name="transaction_type" class="form-select" required>
+                        <option value="credit" {% if category.transaction_type == 'credit' %}selected{% endif %}>Credit (Income)</option>
+                        <option value="debit" {% if category.transaction_type == 'debit' %}selected{% endif %}>Debit (Expense)</option>
+                    </select>
+                </div>
+
+                <div class="text-end">
+                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Update Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

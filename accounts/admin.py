@@ -15,7 +15,7 @@ class AccountAdmin(admin.ModelAdmin):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('reference_number', 'account', 'transaction_type', 'amount', 'transaction_date')
-    list_filter = ('transaction_type', 'transaction_date')
+    list_display = ('reference_number', 'account', 'transaction_type', 'amount', 'date')
+    list_filter = ('transaction_type', 'date')
     search_fields = ('reference_number', 'description')
     readonly_fields = ('reference_number', 'created_at', 'updated_at')

@@ -58,128 +58,124 @@ class Account(models.Model):
         if self.level == 'pastorate':
             return f"{self.pastorate.pastorate_name} - {self.name}"
         return f"{self.church.church_name} - {self.name}"
-    
-    def get_monthly_stats(self):
-        """Get monthly transaction statistics"""
-        current_month = timezone.now().month
-        current_year = timezone.now().year
-        
-        monthly_transactions = self.transactions.filter(
-            transaction_date__month=current_month,
-            transaction_date__year=current_year
-        )
-        
-        total_credits = monthly_transactions.filter(
-            transaction_type='credit'
-        ).aggregate(total=models.Sum('amount'))['total'] or 0
-        
-        total_debits = monthly_transactions.filter(
-            transaction_type='debit'
-        ).aggregate(total=models.Sum('amount'))['total'] or 0
-        
-        return {
-            'total_credits': total_credits,
-            'total_debits': total_debits,
-            'net_change': total_credits - total_debits,
-            'transaction_count': monthly_transactions.count()
-        }
+
+class PrimaryCategory(models.Model):
+    """Primary transaction categories like Income, Expense"""
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    transaction_type = models.CharField(max_length=10, choices=[('credit', 'Credit'), ('debit', 'Debit')])
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Primary Categories"
+
+    def __str__(self):
+        return f"{self.name} ({self.get_transaction_type_display()})"
+
+class SecondaryCategory(models.Model):
+    """Secondary transaction categories like Receipts, Bills, etc."""
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    primary_category = models.ForeignKey(PrimaryCategory, on_delete=models.PROTECT, related_name='secondary_categories')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name_plural = "Secondary Categories"
+
+    def __str__(self):
+        return f"{self.primary_category.name} - {self.name}"
 
 class Transaction(models.Model):
     TRANSACTION_TYPES = [
-        ('credit', 'Credit'),
-        ('debit', 'Debit'),
+        ('receipt', 'Receipt'),
+        ('bill', 'Bill/Voucher'),
+        ('aqudence', 'Aqudence'),
+        ('offering', 'Church Offering'),
+        ('custom_debit', 'Custom Debit'),
+        ('custom_credit', 'Custom Credit'),
+        ('contra', 'Contra Entry (Debit)'),
+        ('contra_credit', 'Contra Entry (Credit)'),
     ]
     
-    account = models.ForeignKey(
-        Account, 
-        on_delete=models.PROTECT,
-        related_name='transactions'
-    )
-    transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='transactions')
+    to_account = models.ForeignKey(Account, on_delete=models.PROTECT, null=True, blank=True, 
+                                 related_name='incoming_transactions', help_text='For contra debit entries only')
+    from_account = models.ForeignKey(Account, on_delete=models.PROTECT, null=True, blank=True,
+                                   related_name='outgoing_transactions', help_text='For contra credit entries only')
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
+    date = models.DateField(default=timezone.now)
     description = models.TextField(blank=True, null=True)
-    reference_number = models.CharField(max_length=50, unique=True)
-    transaction_date = models.DateField(default=timezone.now)
+    
+    # Category fields
+    primary_category = models.ForeignKey(PrimaryCategory, on_delete=models.PROTECT, null=True, blank=True)
+    secondary_category = models.ForeignKey(SecondaryCategory, on_delete=models.PROTECT, null=True, blank=True)
+    
+    # Fields for different transaction types
+    receipt_number = models.CharField(max_length=50, blank=True, null=True)
+    reference_number = models.CharField(max_length=50, blank=True, null=True)
+    aqudence_number = models.CharField(max_length=50, blank=True, null=True)
+    aqudence_ref = models.CharField(max_length=100, blank=True, null=True)
+    family_name = models.CharField(max_length=100, blank=True, null=True)
+    member_name = models.CharField(max_length=100, blank=True, null=True)
+    church = models.ForeignKey(Church, on_delete=models.PROTECT, null=True, blank=True)
+    
+    created_by = models.ForeignKey(get_user_model(), on_delete=models.PROTECT, related_name='created_transactions', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    created_by = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.PROTECT,
-        related_name='created_transactions',
-        null=True,
-        blank=True
-    )
-    
-    def save(self, *args, **kwargs):
-        if not self.reference_number:
-            timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
-            self.reference_number = f"TXN-{timestamp}"
-        
-        # Get the user who is making the change
-        user = kwargs.pop('user', None)
-        
-        # If this is an existing transaction
-        if self.pk:
-            # Get the old instance from the database
-            old_instance = Transaction.objects.get(pk=self.pk)
-            
-            # Create history record if there are changes
-            if (old_instance.amount != self.amount or 
-                old_instance.transaction_type != self.transaction_type or
-                old_instance.description != self.description or
-                old_instance.transaction_date != self.transaction_date):
-                
-                TransactionHistory.objects.create(
-                    transaction=self,
-                    amount=old_instance.amount,
-                    description=old_instance.description,
-                    transaction_type=old_instance.transaction_type,
-                    transaction_date=old_instance.transaction_date,
-                    modified_by=user
-                )
-                
-                # Update account balance
-                if old_instance.transaction_type == 'credit':
-                    self.account.balance -= old_instance.amount
-                else:
-                    self.account.balance += old_instance.amount
-        
-        # Update account balance with new values
-        if self.transaction_type == 'credit':
-            self.account.balance += self.amount
-        else:
-            self.account.balance -= self.amount
-        
-        self.account.save()
-        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.reference_number} - {self.account.name}"
+        if self.transaction_type == 'receipt':
+            return f"Receipt #{self.receipt_number}"
+        elif self.transaction_type == 'bill':
+            return f"Bill/Voucher #{self.reference_number}"
+        elif self.transaction_type == 'aqudence':
+            return f"Aqudence #{self.aqudence_number}"
+        elif self.transaction_type == 'offering':
+            return f"Offering from {self.church.church_name}"
+        elif self.transaction_type == 'contra':
+            return f"Contra Debit: {self.account.name} → {self.to_account.name}"
+        elif self.transaction_type == 'contra_credit':
+            return f"Contra Credit: {self.from_account.name} → {self.account.name}"
+        else:
+            return f"{self.get_transaction_type_display()} #{self.reference_number}"
 
 class TransactionHistory(models.Model):
     """Model to track changes in transactions"""
-    transaction = models.ForeignKey(
-        Transaction,
-        on_delete=models.CASCADE,
-        related_name='history'
-    )
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='history')
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    description = models.TextField()
-    transaction_type = models.CharField(max_length=10, choices=Transaction.TRANSACTION_TYPES)
-    transaction_date = models.DateTimeField()
+    description = models.TextField(blank=True, null=True)
+    date = models.DateField(default=timezone.now)
+    receipt_number = models.CharField(max_length=50, blank=True, null=True)
+    reference_number = models.CharField(max_length=50, blank=True, null=True)
+    aqudence_number = models.CharField(max_length=50, blank=True, null=True)
+    aqudence_ref = models.CharField(max_length=100, blank=True, null=True)
+    family_name = models.CharField(max_length=100, blank=True, null=True)
+    member_name = models.CharField(max_length=100, blank=True, null=True)
     modified_at = models.DateTimeField(auto_now_add=True)
-    modified_by = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.PROTECT,
-        related_name='modified_transactions',
-        null=True
-    )
+    modified_by = models.ForeignKey(get_user_model(), on_delete=models.PROTECT, null=True, blank=True)
     
     class Meta:
         ordering = ['-modified_at']
     
     def __str__(self):
-        return f"History for {self.transaction.reference_number}"
+        return f"History for {self.transaction}"
+
+@receiver(post_save, sender=Pastorate)
+def create_pastorate_accounts(sender, instance, created, **kwargs):
+    """Create default accounts when a new pastorate is created"""
+    if created:
+        create_default_accounts(instance, 'pastorate')
+
+@receiver(post_save, sender=Church)
+def create_church_accounts(sender, instance, created, **kwargs):
+    """Create default accounts when a new church is created"""
+    if created:
+        create_default_accounts(instance, 'church')
 
 def create_default_accounts(entity, level):
     """Helper function to create default cash and bank accounts"""
@@ -235,82 +231,54 @@ def create_default_accounts(entity, level):
             level='church'
         )
 
-@receiver(post_save, sender=Pastorate)
-def create_pastorate_accounts(sender, instance, created, **kwargs):
-    """Create default accounts when a new pastorate is created"""
-    if created:
-        create_default_accounts(instance, 'pastorate')
-
-@receiver(post_save, sender=Church)
-def create_church_accounts(sender, instance, created, **kwargs):
-    """Create default accounts when a new church is created"""
-    if created:
-        create_default_accounts(instance, 'church')
-
-class LedgerGroup(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
-    transaction_type = models.CharField(max_length=10, choices=Transaction.TRANSACTION_TYPES)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+@receiver(post_save, sender=Transaction)
+def update_account_balances(sender, instance, created, **kwargs):
+    """Update account balances when a transaction is saved"""
+    # Get all transactions for the primary account
+    account = instance.account
+    account.balance = 0  # Reset balance
     
-    def __str__(self):
-        return self.name
+    # Calculate credits (receipts, offerings, custom credits, contra credits)
+    credits = Transaction.objects.filter(
+        account=account,
+        transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit']
+    ).aggregate(total=models.Sum('amount'))['total'] or 0
     
-    class Meta:
-        ordering = ['name']
-
-class TransactionCategory(models.Model):
-    CATEGORY_TYPES = [
-        ('receipts', 'Receipts'),
-        ('offertory', 'Church Offertory'),
-        ('bills', 'Bills and Vouchers'),
-        ('acquittance', 'Acquittance'),
-        ('ledger', 'Ledger Entry'),
-    ]
+    # Calculate debits (bills, custom debits, aqudence, contra debits)
+    debits = Transaction.objects.filter(
+        account=account,
+        transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra']
+    ).aggregate(total=models.Sum('amount'))['total'] or 0
     
-    name = models.CharField(max_length=50)
-    category_type = models.CharField(max_length=20, choices=CATEGORY_TYPES)
-    transaction_type = models.CharField(max_length=10, choices=Transaction.TRANSACTION_TYPES)
-    is_active = models.BooleanField(default=True)
-    requires_number = models.BooleanField(default=False)
-    requires_church = models.BooleanField(default=False)
-    ledger_group = models.ForeignKey(LedgerGroup, on_delete=models.PROTECT, null=True, blank=True)
-    pastorate_only = models.BooleanField(default=False, help_text='If True, this category is only available for pastorate level accounts')
+    # Update balance
+    account.balance = credits - debits
+    print(f"\nUpdating balance for {account.name}:")
+    print(f"Credits (including contra credits): {credits}")
+    print(f"Debits (including contra debits): {debits}")
+    print(f"Final Balance: {account.balance}")
+    account.save()
     
-    def __str__(self):
-        if self.ledger_group:
-            return f"{self.ledger_group.name} - {self.name}"
-        return self.name
-    
-    class Meta:
-        verbose_name_plural = "Transaction Categories"
-
-class TransactionDetail(models.Model):
-    transaction = models.OneToOneField(
-        Transaction,
-        on_delete=models.CASCADE,
-        related_name='details'
-    )
-    category = models.ForeignKey(
-        TransactionCategory,
-        on_delete=models.PROTECT,
-        related_name='transactions'
-    )
-    reference_number = models.CharField(
-        max_length=50, 
-        blank=True, 
-        null=True,
-        help_text="Receipt/Bill/Voucher number"
-    )
-    church = models.ForeignKey(
-        'congregation.Church',
-        on_delete=models.PROTECT,
-        related_name='offertory_transactions',
-        blank=True,
-        null=True
-    )
-    
-    def __str__(self):
-        return f"{self.category.name} - {self.transaction.reference_number}"
+    # If this is a contra entry, also update the other account's balance
+    if instance.transaction_type == 'contra' and instance.to_account:
+        to_account = instance.to_account
+        to_account.balance = 0  # Reset balance
+        
+        # Calculate credits for receiving account
+        to_credits = Transaction.objects.filter(
+            account=to_account,
+            transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit']
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        # Calculate debits for receiving account
+        to_debits = Transaction.objects.filter(
+            account=to_account,
+            transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra']
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        # Update receiving account balance
+        to_account.balance = to_credits - to_debits
+        print(f"\nUpdating balance for {to_account.name} (receiving account):")
+        print(f"Credits (including contra credits): {to_credits}")
+        print(f"Debits (including contra debits): {to_debits}")
+        print(f"Final Balance: {to_account.balance}")
+        to_account.save()

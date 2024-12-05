@@ -1,4 +1,3 @@
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
@@ -634,3 +633,4 @@ def essentials(request):
         'transaction_history': transaction_history,
     }
     return render(request, 'congregation/settings/essentials.html', context)
+

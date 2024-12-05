@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Transaction Categories - Accounts{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Accounts Dashboard</a></li>
+<li class="breadcrumb-item active">Transaction Categories</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Primary Categories -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Primary Categories</h6>
+            <a href="{% url 'accounts:primary_category_add' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Add Primary Category
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Transaction Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in primary_categories %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td>{{ category.description|default:"-" }}</td>
+                            <td>
+                                {% if category.transaction_type == 'credit' %}
+                                <span class="badge badge-success">Credit (Income)</span>
+                                {% else %}
+                                <span class="badge badge-danger">Debit (Expense)</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'accounts:primary_category_edit' category.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'accounts:primary_category_delete' category.id %}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No primary categories found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Categories -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Secondary Categories</h6>
+            <a href="{% url 'accounts:secondary_category_add' %}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> Add Secondary Category
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Primary Category</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in secondary_categories %}
+                        <tr>
+                            <td>{{ category.name }}</td>
+                            <td>
+                                {{ category.primary_category.name }}
+                                {% if category.primary_category.transaction_type == 'credit' %}
+                                <span class="badge badge-success">Credit</span>
+                                {% else %}
+                                <span class="badge badge-danger">Debit</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ category.description|default:"-" }}</td>
+                            <td>
+                                <a href="{% url 'accounts:secondary_category_edit' category.id %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <a href="{% url 'accounts:secondary_category_delete' category.id %}" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No secondary categories found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

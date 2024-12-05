@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Primary Category - Accounts{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Accounts Dashboard</a></li>
+<li class="breadcrumb-item active">Delete Primary Category</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Delete Primary Category</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">Warning!</h5>
+                <p class="mb-0">Are you sure you want to delete the primary category "{{ category.name }}"? This action cannot be undone.</p>
+                {% if category.secondary_categories.exists %}
+                <hr>
+                <p class="mb-0">This category has {{ category.secondary_categories.count }} secondary categories. Deleting this will also delete all associated secondary categories.</p>
+                {% endif %}
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="text-end">
+                    <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-danger">Delete Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -6,10 +6,10 @@
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_list' %}">Pastorates</a></li>
 {% if account.level == 'pastorate' %}
-<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=account.pastorate.id %}">{{ account.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' account.pastorate.id %}">{{ account.pastorate.pastorate_name }}</a></li>
 {% else %}
-<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pk=account.church.pastorate.id %}">{{ account.church.pastorate.pastorate_name }}</a></li>
-<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' pk=account.church.id %}">{{ account.church.church_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' account.church.pastorate.id %}">{{ account.church.pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:church_detail' account.church.id %}">{{ account.church.church_name }}</a></li>
 {% endif %}
 <li class="breadcrumb-item active">{{ account.name }}</li>
 {% endblock %}
@@ -25,7 +25,7 @@
                     <p class="text-muted mb-0">{{ account.account_type.name }}</p>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <h3 class="mb-0 {% if account.balance > 0 %}text-success{% else %}text-danger{% endif %}">
+                    <h3 class="mb-0 {% if account.balance >= 0 %}text-success{% else %}text-danger{% endif %}">
                         ₹ {{ account.balance }}
                     </h3>
                     <p class="text-muted mb-0">Current Balance</p>
@@ -64,9 +64,33 @@
             <div class="card bg-info text-white h-100">
                 <div class="card-body">
                     <h6 class="card-title">Transactions</h6>
-                    <h3 class="mb-0">{{ monthly_stats.transaction_count }}</h3>
+                    <h3 class="mb-0">{{ transactions|length }}</h3>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Report Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Generate Report</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" action="{% url 'accounts:account_report' pk=account.id %}" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="start_date" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="end_date" class="form-control" required>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-file-alt me-1"></i> View Report
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -75,9 +99,30 @@
         <div class="card-header bg-white py-3">
             <div class="d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Transactions</h5>
-                <a href="{% url 'accounts:transaction_add' account_id=account.id %}" class="btn btn-primary btn-sm">
-                    <i class="fas fa-plus me-1"></i> Add Transaction
-                </a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-plus me-1"></i> Add Transaction
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% if account.level == 'pastorate' %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:receipt_add' pastorate_id=account.pastorate.id %}">Receipt</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:bill_add' pastorate_id=account.pastorate.id %}">Bill/Voucher</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:aqudence_add' pastorate_id=account.pastorate.id %}">Aqudence</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:offering_add' pastorate_id=account.pastorate.id %}">Church Offering</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:custom_debit_add' pastorate_id=account.pastorate.id %}">Custom Debit</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:custom_credit_add' pastorate_id=account.pastorate.id %}">Custom Credit</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:contra_add' pastorate_id=account.pastorate.id %}">Contra Entry</a></li>
+                        {% else %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:receipt_add' pastorate_id=account.church.pastorate.id %}">Receipt</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:bill_add' pastorate_id=account.church.pastorate.id %}">Bill/Voucher</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:aqudence_add' pastorate_id=account.church.pastorate.id %}">Aqudence</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:offering_add' pastorate_id=account.church.pastorate.id %}">Church Offering</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:custom_debit_add' pastorate_id=account.church.pastorate.id %}">Custom Debit</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:custom_credit_add' pastorate_id=account.church.pastorate.id %}">Custom Credit</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:contra_add' pastorate_id=account.church.pastorate.id %}">Contra Entry</a></li>
+                        {% endif %}
+                    </ul>
+                </div>
             </div>
         </div>
         <div class="card-body">
@@ -97,60 +142,102 @@
                     <tbody>
                         {% for transaction in transactions %}
                         <tr>
-                            <td>{{ transaction.transaction_date|date:"d M Y" }}</td>
-                            <td>{{ transaction.reference_number }}</td>
-                            <td>{{ transaction.description }}</td>
+                            <td>{{ transaction.date|date:"d M Y" }}</td>
                             <td>
-                                <span class="badge {% if transaction.transaction_type == 'credit' %}bg-success{% else %}bg-danger{% endif %}">
-                                    {{ transaction.get_transaction_type_display }}
+                                {% if transaction.transaction_type == 'receipt' %}
+                                    {{ transaction.receipt_number }}
+                                {% elif transaction.transaction_type == 'bill' %}
+                                    {{ transaction.reference_number }}
+                                {% elif transaction.transaction_type == 'aqudence' %}
+                                    {{ transaction.aqudence_number }}
+                                {% else %}
+                                    {{ transaction.reference_number }}
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.description|default:"-" }}</td>
+                            <td>
+                                {% if transaction.transaction_type == 'receipt' %}
+                                    <span class="badge bg-success">Receipt</span>
+                                {% elif transaction.transaction_type == 'bill' %}
+                                    <span class="badge bg-danger">Bill</span>
+                                {% elif transaction.transaction_type == 'aqudence' %}
+                                    <span class="badge bg-warning">Aqudence</span>
+                                {% elif transaction.transaction_type == 'offering' %}
+                                    <span class="badge bg-info">Offering</span>
+                                {% elif transaction.transaction_type == 'custom_credit' %}
+                                    <span class="badge bg-success">Credit</span>
+                                {% elif transaction.transaction_type == 'custom_debit' %}
+                                    <span class="badge bg-danger">Debit</span>
+                                {% elif transaction.transaction_type == 'contra' %}
+                                    <span class="badge bg-danger">Contra Debit</span>
+                                {% elif transaction.transaction_type == 'contra_credit' %}
+                                    <span class="badge bg-success">Contra Credit</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="{% if transaction.transaction_type in 'receipt,offering,custom_credit,contra_credit' %}text-success{% else %}text-danger{% endif %}">
+                                    ₹ {{ transaction.amount }}
                                 </span>
                             </td>
-                            <td>₹ {{ transaction.amount }}</td>
                             <td>
-                                <div class="btn-group">
-                                    <a href="{% url 'accounts:transaction_edit' pk=transaction.id %}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a href="{% url 'accounts:transaction_delete' pk=transaction.id %}" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
-                                </div>
+                                {% if transaction.transaction_type == 'receipt' %}
+                                    {% if account.level == 'pastorate' %}
+                                        <a href="{% url 'accounts:receipt_detail' account.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:receipt_detail' account.church.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% endif %}
+                                {% elif transaction.transaction_type == 'bill' %}
+                                    {% if account.level == 'pastorate' %}
+                                        <a href="{% url 'accounts:bill_detail' account.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:bill_detail' account.church.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% endif %}
+                                {% elif transaction.transaction_type == 'aqudence' %}
+                                    {% if account.level == 'pastorate' %}
+                                        <a href="{% url 'accounts:aqudence_detail' account.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:aqudence_detail' account.church.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% endif %}
+                                {% elif transaction.transaction_type == 'offering' %}
+                                    {% if account.level == 'pastorate' %}
+                                        <a href="{% url 'accounts:offering_detail' account.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:offering_detail' account.church.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% endif %}
+                                {% elif transaction.transaction_type == 'custom_credit' or transaction.transaction_type == 'custom_debit' %}
+                                    {% if account.level == 'pastorate' %}
+                                        <a href="{% url 'accounts:custom_credit_detail' account.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:custom_credit_detail' account.church.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% endif %}
+                                {% elif transaction.transaction_type == 'contra' or transaction.transaction_type == 'contra_credit' %}
+                                    {% if account.level == 'pastorate' %}
+                                        <a href="{% url 'accounts:contra_detail' account.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% else %}
+                                        <a href="{% url 'accounts:contra_detail' account.church.pastorate.id transaction.id %}" class="btn btn-sm btn-outline-primary">View</a>
+                                    {% endif %}
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Pagination -->
-            {% if transactions.has_other_pages %}
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if transactions.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ transactions.previous_page_number }}">Previous</a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for num in transactions.paginator.page_range %}
-                    <li class="page-item {% if transactions.number == num %}active{% endif %}">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
-                    {% endfor %}
-                    
-                    {% if transactions.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ transactions.next_page_number }}">Next</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
-            
             {% else %}
-            <p class="text-muted mb-0">No transactions found.</p>
+            <p class="text-muted text-center mb-0">No transactions found.</p>
             {% endif %}
         </div>
     </div>
 </div>
+
+<style>
+.table th {
+    font-weight: 600;
+    color: #6c757d;
+}
+.badge {
+    font-weight: 500;
+    padding: 0.35rem 0.7rem;
+}
+</style>
 {% endblock %} 

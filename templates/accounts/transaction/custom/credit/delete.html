@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Custom Credit - Accounts{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pastorate.id %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:custom_credit_list' pastorate.id %}">Custom Credits</a></li>
+<li class="breadcrumb-item active">Delete Credit</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">Delete Custom Credit</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-danger">
+                <h5 class="alert-heading">Warning!</h5>
+                <p class="mb-0">Are you sure you want to delete this custom credit? This action cannot be undone.</p>
+                <hr>
+                <ul class="mb-0">
+                    <li>Reference Number: {{ transaction.reference_number }}</li>
+                    <li>Category: {{ transaction.category.name }}</li>
+                    <li>Account: {{ transaction.account.name }}</li>
+                    <li>Amount: ₹{{ transaction.amount }}</li>
+                    <li>Date: {{ transaction.date|date:"d/m/Y" }}</li>
+                    {% if transaction.description %}<li>Description: {{ transaction.description }}</li>{% endif %}
+                </ul>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="text-end">
+                    <a href="{% url 'accounts:custom_credit_list' pastorate.id %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-danger">Delete Credit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

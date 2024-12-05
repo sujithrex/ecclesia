@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Report - {{ date|date:"d/m/Y" }} - Accounts{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:pastorate_detail' pastorate.id %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'accounts:transaction_summary' pastorate.id %}">Transaction Summary</a></li>
+<li class="breadcrumb-item active">Daily Report</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Date Selection -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Select Date</h6>
+        </div>
+        <div class="card-body">
+            <form method="get" class="form-inline justify-content-center">
+                <div class="form-group mx-sm-3 mb-2">
+                    <input type="date" name="date" class="form-control" value="{{ date|date:'Y-m-d' }}">
+                </div>
+                <button type="submit" class="btn btn-primary mb-2">View Report</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row">
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Total Income</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ totals.income }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill-wave fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-danger shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Total Expenses</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ totals.expenses }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-money-bill fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Net Balance</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">₹{{ totals.net }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-balance-scale fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Transactions for {{ date|date:"d/m/Y" }}</h6>
+            <div class="btn-group">
+                <a href="{% url 'accounts:monthly_report' pastorate.id %}" class="btn btn-sm btn-outline-primary">Monthly Report</a>
+                <a href="{% url 'accounts:yearly_report' pastorate.id %}" class="btn btn-sm btn-outline-primary">Yearly Report</a>
+                <a href="{% url 'accounts:custom_report' pastorate.id %}" class="btn btn-sm btn-outline-primary">Custom Report</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Type</th>
+                            <th>Reference</th>
+                            <th>Account</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td>{{ transaction.created_at|date:"h:i A" }}</td>
+                            <td>
+                                {% if transaction.transaction_type == 'credit' %}
+                                <span class="badge badge-success">{{ transaction.transaction_subtype|title }}</span>
+                                {% else %}
+                                <span class="badge badge-danger">{{ transaction.transaction_subtype|title }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if transaction.receipt_number %}
+                                {{ transaction.receipt_number }}
+                                {% else %}
+                                {{ transaction.reference_number }}
+                                {% endif %}
+                            </td>
+                            <td>{{ transaction.account.name }}</td>
+                            <td>{{ transaction.description|default:"-" }}</td>
+                            <td class="text-right">₹{{ transaction.amount }}</td>
+                            <td>
+                                {% if transaction.transaction_subtype == 'receipt' %}
+                                <a href="{% url 'accounts:receipt_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-primary">View</a>
+                                {% elif transaction.transaction_subtype == 'bill' %}
+                                <a href="{% url 'accounts:bill_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-primary">View</a>
+                                {% elif transaction.transaction_subtype == 'aqudence' %}
+                                <a href="{% url 'accounts:aqudence_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-primary">View</a>
+                                {% elif transaction.transaction_subtype == 'offering' %}
+                                <a href="{% url 'accounts:offering_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-primary">View</a>
+                                {% elif transaction.transaction_subtype == 'custom' %}
+                                    {% if transaction.transaction_type == 'credit' %}
+                                    <a href="{% url 'accounts:custom_credit_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-primary">View</a>
+                                    {% else %}
+                                    <a href="{% url 'accounts:custom_debit_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-primary">View</a>
+                                    {% endif %}
+                                {% elif transaction.transaction_subtype == 'contra' %}
+                                <a href="{% url 'accounts:contra_detail' pastorate.id transaction.id %}" class="btn btn-sm btn-primary">View</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">No transactions found for this date.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
