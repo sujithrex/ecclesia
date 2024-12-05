@@ -1024,7 +1024,7 @@ def custom_debit_list(request, pastorate_id):
         'selected_primary_category': primary_category_id,
         'selected_secondary_category': secondary_category_id,
     }
-    return render(request, 'accounts/transaction/custom_debit/list.html', context)
+    return render(request, 'accounts/transaction/custom/debit/list.html', context)
 
 @login_required
 def custom_debit_add(request, pastorate_id):
@@ -1075,7 +1075,7 @@ def custom_debit_add(request, pastorate_id):
         'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='debit'),
         'today': timezone.now()
     }
-    return render(request, 'accounts/transaction/custom_debit/add.html', context)
+    return render(request, 'accounts/transaction/custom/debit/add.html', context)
 
 @login_required
 def custom_debit_detail(request, pastorate_id, pk):
@@ -1095,7 +1095,7 @@ def custom_debit_detail(request, pastorate_id, pk):
         'pastorate': pastorate,
         'transaction': transaction,
     }
-    return render(request, 'accounts/transaction/custom_debit/detail.html', context)
+    return render(request, 'accounts/transaction/custom/debit/detail.html', context)
 
 @login_required
 def custom_debit_edit(request, pastorate_id, pk):
@@ -1179,7 +1179,7 @@ def custom_debit_delete(request, pastorate_id, pk):
         'pastorate': pastorate,
         'transaction': transaction,
     }
-    return render(request, 'accounts/transaction/custom_debit/delete.html', context)
+    return render(request, 'accounts/transaction/custom/debit/delete.html', context)
 
 @login_required
 def custom_credit_list(request, pastorate_id):
@@ -1248,7 +1248,7 @@ def custom_credit_list(request, pastorate_id):
         'selected_primary_category': primary_category_id,
         'selected_secondary_category': secondary_category_id,
     }
-    return render(request, 'accounts/transaction/custom_credit/list.html', context)
+    return render(request, 'accounts/transaction/custom/credit/list.html', context)
 
 @login_required
 def custom_credit_add(request, pastorate_id):
@@ -1299,7 +1299,7 @@ def custom_credit_add(request, pastorate_id):
         'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='credit'),
         'today': timezone.now()
     }
-    return render(request, 'accounts/transaction/custom_credit/add.html', context)
+    return render(request, 'accounts/transaction/custom/credit/add.html', context)
 
 @login_required
 def custom_credit_detail(request, pastorate_id, pk):
@@ -1403,7 +1403,7 @@ def custom_credit_delete(request, pastorate_id, pk):
         'pastorate': pastorate,
         'transaction': transaction,
     }
-    return render(request, 'accounts/transaction/custom_credit/delete.html', context)
+    return render(request, 'accounts/transaction/custom/credit/delete.html', context)
 
 @login_required
 def contra_list(request, pastorate_id):
