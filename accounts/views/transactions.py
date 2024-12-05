@@ -24,6 +24,14 @@ def receipt_list(request, pastorate_id):
         'secondary_category'
     ).order_by('-date')
 
+    # Print debug information
+    print("\nDEBUG - Receipt List:")
+    print(f"Pastorate: {pastorate.pastorate_name}")
+    print(f"Total receipts found: {receipts.count()}")
+    print("Receipt details:")
+    for receipt in receipts:
+        print(f"- {receipt.date}: {receipt.amount} ({receipt.account.name})")
+
     # Search functionality
     search_query = request.GET.get('search', '')
     if search_query:
@@ -151,8 +159,9 @@ def receipt_detail(request, pastorate_id, pk):
     transaction = get_object_or_404(
         Transaction.objects.select_related(
             'account',
-            'church',
-            'created_by'
+            'created_by',
+            'primary_category',
+            'secondary_category'
         ),
         pk=pk,
         transaction_type='receipt'
@@ -162,7 +171,7 @@ def receipt_detail(request, pastorate_id, pk):
         'pastorate': pastorate,
         'transaction': transaction,
     }
-    return render(request, 'accounts/transaction/receipt_detail.html', context)
+    return render(request, 'accounts/transaction/receipts/detail.html', context)
 
 @login_required
 def receipt_edit(request, pastorate_id, pk):
@@ -414,7 +423,7 @@ def aqudence_list(request, pastorate_id):
     pastorate = get_object_or_404(Pastorate, pk=pastorate_id)
     
     # Get all aqudence transactions for this pastorate and its churches
-    aqudence = Transaction.objects.filter(
+    aqudences = Transaction.objects.filter(
         Q(account__pastorate=pastorate) | Q(account__church__pastorate=pastorate),
         transaction_type='aqudence'
     ).select_related(
@@ -424,10 +433,18 @@ def aqudence_list(request, pastorate_id):
         'secondary_category'
     ).order_by('-date')
 
+    # Print debug information
+    print("\nDEBUG - Aqudence List:")
+    print(f"Pastorate: {pastorate.pastorate_name}")
+    print(f"Total aqudence entries found: {aqudences.count()}")
+    print("Aqudence details:")
+    for entry in aqudences:
+        print(f"- {entry.date}: {entry.amount} ({entry.account.name})")
+
     # Search functionality
     search_query = request.GET.get('search', '')
     if search_query:
-        aqudence = aqudence.filter(
+        aqudences = aqudences.filter(
             Q(reference_number__icontains=search_query) |
             Q(description__icontains=search_query) |
             Q(primary_category__name__icontains=search_query) |
@@ -438,25 +455,25 @@ def aqudence_list(request, pastorate_id):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     if start_date and end_date:
-        aqudence = aqudence.filter(date__range=[start_date, end_date])
+        aqudences = aqudences.filter(date__range=[start_date, end_date])
 
     # Account filter
     account_id = request.GET.get('account')
     if account_id:
-        aqudence = aqudence.filter(account_id=account_id)
+        aqudences = aqudences.filter(account_id=account_id)
 
     # Category filters
     primary_category_id = request.GET.get('primary_category')
     secondary_category_id = request.GET.get('secondary_category')
     if primary_category_id:
-        aqudence = aqudence.filter(primary_category_id=primary_category_id)
+        aqudences = aqudences.filter(primary_category_id=primary_category_id)
     if secondary_category_id:
-        aqudence = aqudence.filter(secondary_category_id=secondary_category_id)
+        aqudences = aqudences.filter(secondary_category_id=secondary_category_id)
 
     # Pagination
-    paginator = Paginator(aqudence, 10)  # Show 10 aqudence entries per page
+    paginator = Paginator(aqudences, 10)  # Show 10 aqudence entries per page
     page = request.GET.get('page')
-    aqudence = paginator.get_page(page)
+    aqudences = paginator.get_page(page)
 
     # Get all accounts from pastorate and its churches
     accounts = Account.objects.filter(
@@ -465,7 +482,7 @@ def aqudence_list(request, pastorate_id):
 
     context = {
         'pastorate': pastorate,
-        'aqudence': aqudence,
+        'aqudences': aqudences,
         'accounts': accounts,
         'primary_categories': PrimaryCategory.objects.filter(transaction_type='debit'),
         'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='debit'),
@@ -641,6 +658,7 @@ def offering_list(request, pastorate_id):
         transaction_type='offering'
     ).select_related(
         'account',
+        'church',
         'created_by',
         'primary_category',
         'secondary_category'
@@ -1289,49 +1307,40 @@ def contra_list(request, pastorate_id):
     pastorate = get_object_or_404(Pastorate, pk=pastorate_id)
     
     # Get all contra transactions for this pastorate and its churches
-    contras = Transaction.objects.filter(
+    transactions = Transaction.objects.filter(
         Q(account__pastorate=pastorate) | Q(account__church__pastorate=pastorate),
         transaction_type='contra'
     ).select_related(
         'account',
-        'created_by',
-        'primary_category',
-        'secondary_category'
+        'to_account',
+        'created_by'
     ).order_by('-date')
 
     # Search functionality
     search_query = request.GET.get('search', '')
     if search_query:
-        contras = contras.filter(
+        transactions = transactions.filter(
             Q(reference_number__icontains=search_query) |
-            Q(description__icontains=search_query) |
-            Q(primary_category__name__icontains=search_query) |
-            Q(secondary_category__name__icontains=search_query)
+            Q(description__icontains=search_query)
         )
 
     # Date filter
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     if start_date and end_date:
-        contras = contras.filter(date__range=[start_date, end_date])
+        transactions = transactions.filter(date__range=[start_date, end_date])
 
     # Account filter
     account_id = request.GET.get('account')
     if account_id:
-        contras = contras.filter(account_id=account_id)
-
-    # Category filters
-    primary_category_id = request.GET.get('primary_category')
-    secondary_category_id = request.GET.get('secondary_category')
-    if primary_category_id:
-        contras = contras.filter(primary_category_id=primary_category_id)
-    if secondary_category_id:
-        contras = contras.filter(secondary_category_id=secondary_category_id)
+        transactions = transactions.filter(
+            Q(account_id=account_id) | Q(to_account_id=account_id)
+        )
 
     # Pagination
-    paginator = Paginator(contras, 10)  # Show 10 contras per page
+    paginator = Paginator(transactions, 10)  # Show 10 transactions per page
     page = request.GET.get('page')
-    contras = paginator.get_page(page)
+    transactions = paginator.get_page(page)
 
     # Get all accounts from pastorate and its churches
     accounts = Account.objects.filter(
@@ -1340,16 +1349,12 @@ def contra_list(request, pastorate_id):
 
     context = {
         'pastorate': pastorate,
-        'contras': contras,
+        'transactions': transactions,
         'accounts': accounts,
-        'primary_categories': PrimaryCategory.objects.filter(transaction_type='contra'),
-        'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='contra'),
         'search_query': search_query,
         'start_date': start_date,
         'end_date': end_date,
-        'selected_account': account_id,
-        'selected_primary_category': primary_category_id,
-        'selected_secondary_category': secondary_category_id,
+        'selected_account': account_id
     }
     return render(request, 'accounts/transaction/contra/list.html', context)
 
@@ -1371,43 +1376,30 @@ def contra_add(request, pastorate_id):
             date = request.POST.get('date')
             reference_number = request.POST.get('reference_number')
             description = request.POST.get('description')
-            primary_category = get_object_or_404(PrimaryCategory, pk=request.POST.get('primary_category'))
-            secondary_category = get_object_or_404(SecondaryCategory, pk=request.POST.get('secondary_category'))
-
-            # Validate categories
-            if secondary_category.primary_category != primary_category:
-                raise ValueError("Selected secondary category does not belong to the selected primary category")
 
             # Create the contra transaction (debit entry)
             debit_transaction = Transaction.objects.create(
                 account=from_account,
+                to_account=to_account,
                 amount=amount,
                 date=date,
                 reference_number=reference_number,
                 description=f"Contra Entry (Debit) - {description}",
                 transaction_type='contra',
-                primary_category=primary_category,
-                secondary_category=secondary_category,
                 created_by=request.user
             )
 
             # Create the corresponding credit entry
             credit_transaction = Transaction.objects.create(
                 account=to_account,
+                from_account=from_account,
                 amount=amount,
                 date=date,
                 reference_number=reference_number,
                 description=f"Contra Entry (Credit) - {description}",
-                transaction_type='contra',
-                primary_category=primary_category,
-                secondary_category=secondary_category,
-                created_by=request.user,
-                contra_reference=debit_transaction
+                transaction_type='contra_credit',
+                created_by=request.user
             )
-
-            # Update the debit entry with the credit reference
-            debit_transaction.contra_reference = credit_transaction
-            debit_transaction.save()
 
             messages.success(request, 'Contra entry created successfully.')
             return redirect('accounts:contra_list', pastorate_id=pastorate_id)
@@ -1417,8 +1409,6 @@ def contra_add(request, pastorate_id):
     context = {
         'pastorate': pastorate,
         'accounts': accounts,
-        'primary_categories': PrimaryCategory.objects.filter(transaction_type='contra'),
-        'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='contra'),
         'today': timezone.now()
     }
     return render(request, 'accounts/transaction/contra/add.html', context)
@@ -1429,19 +1419,31 @@ def contra_detail(request, pastorate_id, pk):
     transaction = get_object_or_404(
         Transaction.objects.select_related(
             'account',
-            'created_by',
-            'primary_category',
-            'secondary_category',
-            'contra_reference',
-            'contra_reference__account'
+            'to_account',
+            'from_account',
+            'created_by'
         ),
         pk=pk,
         transaction_type='contra'
     )
     
+    # Get the corresponding credit entry
+    credit_entry = Transaction.objects.select_related(
+        'account',
+        'to_account',
+        'from_account'
+    ).filter(
+        transaction_type='contra_credit',
+        from_account=transaction.account,
+        to_account=transaction.to_account,
+        date=transaction.date,
+        amount=transaction.amount
+    ).first()
+    
     context = {
         'pastorate': pastorate,
         'transaction': transaction,
+        'credit_entry': credit_entry,
     }
     return render(request, 'accounts/transaction/contra/detail.html', context)
 
@@ -1451,14 +1453,25 @@ def contra_edit(request, pastorate_id, pk):
     transaction = get_object_or_404(
         Transaction.objects.select_related(
             'account',
-            'primary_category',
-            'secondary_category',
-            'contra_reference',
-            'contra_reference__account'
+            'to_account',
+            'from_account'
         ),
         pk=pk,
         transaction_type='contra'
     )
+    
+    # Get the corresponding credit entry
+    credit_entry = Transaction.objects.select_related(
+        'account',
+        'to_account',
+        'from_account'
+    ).filter(
+        transaction_type='contra_credit',
+        from_account=transaction.account,
+        to_account=transaction.to_account,
+        date=transaction.date,
+        amount=transaction.amount
+    ).first()
     
     # Get all accounts from pastorate and its churches
     accounts = Account.objects.filter(
@@ -1474,33 +1487,25 @@ def contra_edit(request, pastorate_id, pk):
             date = request.POST.get('date')
             reference_number = request.POST.get('reference_number')
             description = request.POST.get('description')
-            primary_category = get_object_or_404(PrimaryCategory, pk=request.POST.get('primary_category'))
-            secondary_category = get_object_or_404(SecondaryCategory, pk=request.POST.get('secondary_category'))
-
-            # Validate categories
-            if secondary_category.primary_category != primary_category:
-                raise ValueError("Selected secondary category does not belong to the selected primary category")
 
             # Update the debit transaction
             transaction.account = from_account
+            transaction.to_account = to_account
             transaction.amount = amount
             transaction.date = date
             transaction.reference_number = reference_number
             transaction.description = f"Contra Entry (Debit) - {description}"
-            transaction.primary_category = primary_category
-            transaction.secondary_category = secondary_category
             transaction.save()
 
             # Update the credit transaction
-            contra_transaction = transaction.contra_reference
-            contra_transaction.account = to_account
-            contra_transaction.amount = amount
-            contra_transaction.date = date
-            contra_transaction.reference_number = reference_number
-            contra_transaction.description = f"Contra Entry (Credit) - {description}"
-            contra_transaction.primary_category = primary_category
-            contra_transaction.secondary_category = secondary_category
-            contra_transaction.save()
+            if credit_entry:
+                credit_entry.account = to_account
+                credit_entry.from_account = from_account
+                credit_entry.amount = amount
+                credit_entry.date = date
+                credit_entry.reference_number = reference_number
+                credit_entry.description = f"Contra Entry (Credit) - {description}"
+                credit_entry.save()
 
             messages.success(request, 'Contra entry updated successfully.')
             return redirect('accounts:contra_list', pastorate_id=pastorate_id)
@@ -1510,27 +1515,31 @@ def contra_edit(request, pastorate_id, pk):
     context = {
         'pastorate': pastorate,
         'transaction': transaction,
+        'credit_entry': credit_entry,
         'accounts': accounts,
-        'primary_categories': PrimaryCategory.objects.filter(transaction_type='contra'),
-        'secondary_categories': SecondaryCategory.objects.filter(primary_category__transaction_type='contra'),
     }
     return render(request, 'accounts/transaction/contra/edit.html', context)
 
 @login_required
 def contra_delete(request, pastorate_id, pk):
     pastorate = get_object_or_404(Pastorate, pk=pastorate_id)
-    transaction = get_object_or_404(
-        Transaction.objects.select_related('contra_reference'),
-        pk=pk,
-        transaction_type='contra'
-    )
+    transaction = get_object_or_404(Transaction, pk=pk, transaction_type='contra')
+    
+    # Get the corresponding credit entry
+    credit_entry = Transaction.objects.filter(
+        transaction_type='contra_credit',
+        from_account=transaction.account,
+        to_account=transaction.to_account,
+        date=transaction.date,
+        amount=transaction.amount
+    ).first()
     
     if request.method == 'POST':
         try:
             # Delete both the debit and credit entries
-            contra_transaction = transaction.contra_reference
+            if credit_entry:
+                credit_entry.delete()
             transaction.delete()
-            contra_transaction.delete()
             
             messages.success(request, 'Contra entry deleted successfully.')
             return redirect('accounts:contra_list', pastorate_id=pastorate_id)
@@ -1540,5 +1549,6 @@ def contra_delete(request, pastorate_id, pk):
     context = {
         'pastorate': pastorate,
         'transaction': transaction,
+        'credit_entry': credit_entry,
     }
     return render(request, 'accounts/transaction/contra/delete.html', context)
