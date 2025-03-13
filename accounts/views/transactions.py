@@ -1816,17 +1816,23 @@ def intra_add(request, pastorate_id):
         Q(pastorate=pastorate) | Q(church__pastorate=pastorate)
     ).select_related('church').order_by('name')
 
-    # Get contra categories
+    # Get all categories regardless of type
     primary_categories = PrimaryCategory.objects.filter(
-        transaction_type='contra',
         is_active=True
     ).order_by('name')
+    
+    # Print for debugging
+    print(f"Found {primary_categories.count()} primary categories")
+    for cat in primary_categories:
+        print(f"Category: {cat.name} (Type: {cat.transaction_type})")
 
-    # Get all secondary categories for contra primary categories
+    # Get all secondary categories
     secondary_categories = SecondaryCategory.objects.filter(
-        primary_category__transaction_type='contra',
         is_active=True
     ).select_related('primary_category').order_by('name')
+    
+    # Print for debugging
+    print(f"Found {secondary_categories.count()} secondary categories")
 
     if request.method == 'POST':
         try:
@@ -1880,6 +1886,11 @@ def intra_add(request, pastorate_id):
         'secondary_categories': secondary_categories,
         'today': timezone.now()
     }
+    
+    # Add debug info to context
+    context['debug_primary_count'] = primary_categories.count()
+    context['debug_secondary_count'] = secondary_categories.count()
+    
     return render(request, 'accounts/transaction/intra/add.html', context)
 
 @login_required

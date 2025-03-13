@@ -17,7 +17,6 @@
         <h4 class="mb-0">Create New Intra Transfer</h4>
         <p class="text-muted">Enter fund transfer details with categories below</p>
     </div>
-
     <!-- Intra Transfer Form -->
     <div class="card">
         <div class="card-body">
@@ -101,23 +100,28 @@
                 </div>
 
                 <!-- Categories -->
-                <div class="col-md-6">
-                    <label for="primary_category" class="form-label">Category <span class="text-danger">*</span></label>
-                    <select class="form-select" id="primary_category" name="primary_category" required>
-                        <option value="">Select Category</option>
+                <div class="mb-3">
+                    <label class="form-label">Primary Category</label>
+                    <select name="primary_category" class="form-select" required id="primary_category">
+                        <option value="">Select Primary Category</option>
                         {% for category in primary_categories %}
-                            {% if category.transaction_type == 'contra' %}
-                            <option value="{{ category.id }}">{{ category.name }}</option>
-                            {% endif %}
+                        <option value="{{ category.id }}">
+                            {{ category.name }} 
+                            ({% if category.transaction_type == 'credit' %}Income
+                            {% elif category.transaction_type == 'debit' %}Expense
+                            {% else %}Transfer{% endif %})
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-md-6">
-                    <label for="secondary_category" class="form-label">Subcategory <span class="text-danger">*</span></label>
-                    <select class="form-select" id="secondary_category" name="secondary_category" required>
-                        <option value="">Select Subcategory</option>
+                <div class="mb-3">
+                    <label class="form-label">Secondary Category</label>
+                    <select name="secondary_category" class="form-select" required id="secondary_category">
+                        <option value="">Select Secondary Category</option>
                         {% for category in secondary_categories %}
-                        <option value="{{ category.id }}" data-primary-id="{{ category.primary_category.id }}">{{ category.name }}</option>
+                        <option value="{{ category.id }}" data-primary="{{ category.primary_category.id }}">
+                            {{ category.name }} ({{ category.primary_category.name }})
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
@@ -145,58 +149,47 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle account selection to prevent same account selection
-    const fromAccountSelect = document.getElementById('from_account');
-    const toAccountSelect = document.getElementById('to_account');
-    const primaryCategorySelect = document.getElementById('primary_category');
-    const secondaryCategorySelect = document.getElementById('secondary_category');
-
-    function updateAccountOptions() {
-        const fromAccount = fromAccountSelect.value;
-        const toAccount = toAccountSelect.value;
-
-        // Enable all options first
-        Array.from(fromAccountSelect.options).forEach(option => {
-            option.disabled = false;
-        });
-        Array.from(toAccountSelect.options).forEach(option => {
-            option.disabled = false;
-        });
-
-        // Disable selected options in the other select
-        if (fromAccount) {
-            const toOption = toAccountSelect.querySelector(`option[value="${fromAccount}"]`);
-            if (toOption) toOption.disabled = true;
-        }
-        if (toAccount) {
-            const fromOption = fromAccountSelect.querySelector(`option[value="${toAccount}"]`);
-            if (fromOption) fromOption.disabled = true;
-        }
-    }
-
-    function updateSecondaryCategories() {
-        const primaryId = primaryCategorySelect.value;
-        const options = secondaryCategorySelect.options;
-
-        for (let i = 0; i < options.length; i++) {
-            const option = options[i];
-            if (option.value === '') continue;
-            
-            const optionPrimaryId = option.getAttribute('data-primary-id');
-            option.style.display = optionPrimaryId === primaryId ? '' : 'none';
-        }
-
-        // Reset secondary selection if primary changed
-        secondaryCategorySelect.value = '';
-    }
-
-    fromAccountSelect.addEventListener('change', updateAccountOptions);
-    toAccountSelect.addEventListener('change', updateAccountOptions);
-    primaryCategorySelect.addEventListener('change', updateSecondaryCategories);
+    const primarySelect = document.getElementById('primary_category');
+    const secondarySelect = document.getElementById('secondary_category');
+    const secondaryOptions = Array.from(secondarySelect.options);
     
-    // Run initially to set up states
-    updateAccountOptions();
-    updateSecondaryCategories();
+    // Store all options
+    const allOptions = [];
+    for (let i = 1; i < secondaryOptions.length; i++) {
+        allOptions.push({
+            value: secondaryOptions[i].value,
+            text: secondaryOptions[i].text,
+            primaryId: secondaryOptions[i].dataset.primary
+        });
+    }
+    
+    // Filter secondary categories when primary category changes
+    primarySelect.addEventListener('change', function() {
+        const selectedPrimaryId = this.value;
+        
+        // Clear current options except the first one
+        secondarySelect.innerHTML = '<option value="">Select Secondary Category</option>';
+        
+        if (selectedPrimaryId) {
+            // Add only relevant secondary categories
+            allOptions.forEach(option => {
+                if (option.primaryId === selectedPrimaryId) {
+                    const newOption = document.createElement('option');
+                    newOption.value = option.value;
+                    newOption.text = option.text;
+                    secondarySelect.add(newOption);
+                }
+            });
+        } else {
+            // If no primary category selected, add all secondary categories
+            allOptions.forEach(option => {
+                const newOption = document.createElement('option');
+                newOption.value = option.value;
+                newOption.text = option.text;
+                secondarySelect.add(newOption);
+            });
+        }
+    });
 });
 </script>
 {% endblock %} 
