@@ -82,4 +82,11 @@ urlpatterns = [
     path('pastorate/<int:pastorate_id>/contra/<int:pk>/', transactions.contra_detail, name='contra_detail'),
     path('pastorate/<int:pastorate_id>/contra/<int:pk>/edit/', transactions.contra_edit, name='contra_edit'),
     path('pastorate/<int:pastorate_id>/contra/<int:pk>/delete/', transactions.contra_delete, name='contra_delete'),
+    
+    # Intra Transfer URLs
+    path('pastorate/<int:pastorate_id>/intra/', transactions.intra_list, name='intra_list'),
+    path('pastorate/<int:pastorate_id>/intra/add/', transactions.intra_add, name='intra_add'),
+    path('pastorate/<int:pastorate_id>/intra/<int:pk>/', transactions.intra_detail, name='intra_detail'),
+    path('pastorate/<int:pastorate_id>/intra/<int:pk>/edit/', transactions.intra_edit, name='intra_edit'),
+    path('pastorate/<int:pastorate_id>/intra/<int:pk>/delete/', transactions.intra_delete, name='intra_delete'),
 ] 

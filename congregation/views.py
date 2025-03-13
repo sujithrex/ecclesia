@@ -1,11 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import JsonResponse
+from django.db import models
 from .models import Pastorate, Church, Area, Fellowship, Family, Respect, Relation, Member
 from django.db.models import Count, F, Q
 from datetime import date
 from django.core.paginator import Paginator
 from accounts.models import AccountType, PrimaryCategory
+from django.db import transaction
 
 @login_required
 def pastorate_list(request):
@@ -277,6 +280,52 @@ def area_delete(request, pk):
         'area': area,
     }
     return render(request, 'congregation/area/delete.html', context)
+
+@login_required
+def area_position_edit(request, pk):
+    area = get_object_or_404(Area.objects.select_related('church__pastorate'), pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            # Handle position updates from AJAX request
+            positions = request.POST.getlist('positions[]')
+            
+            # Update all positions in a transaction
+            with transaction.atomic():
+                # First, validate all family IDs belong to this area
+                family_count = Family.objects.filter(
+                    id__in=positions,
+                    area=area
+                ).count()
+                
+                if family_count != len(positions):
+                    raise ValueError("Invalid family IDs detected")
+                
+                # Update positions
+                for index, family_id in enumerate(positions, 1):
+                    Family.objects.filter(
+                        id=family_id,
+                        area=area
+                    ).update(position_no=index)
+            
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            }, status=400)
+    
+    # Get families ordered by position_no, then by family_id for those without position
+    families = Family.objects.filter(area=area).order_by(
+        F('position_no').asc(nulls_last=True),
+        'family_id'
+    ).select_related('respect')
+    
+    context = {
+        'area': area,
+        'families': families,
+    }
+    return render(request, 'congregation/area/position_edit.html', context)
 
 # Fellowship Views
 @login_required

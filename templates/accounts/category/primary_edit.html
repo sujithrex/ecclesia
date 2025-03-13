@@ -31,8 +31,10 @@
                 <div class="mb-3">
                     <label class="form-label">Transaction Type</label>
                     <select name="transaction_type" class="form-select" required>
+                        <option value="">Select Type</option>
                         <option value="credit" {% if category.transaction_type == 'credit' %}selected{% endif %}>Credit (Income)</option>
                         <option value="debit" {% if category.transaction_type == 'debit' %}selected{% endif %}>Debit (Expense)</option>
+                        <option value="contra" {% if category.transaction_type == 'contra' %}selected{% endif %}>Contra (Transfer)</option>
                     </select>
                 </div>
 

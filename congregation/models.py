@@ -80,12 +80,29 @@ class Family(TimestampModel):
     email = models.EmailField()
     address = models.TextField()
     prayer_points = models.TextField()
+    position_no = models.PositiveIntegerField(null=True)
 
     def __str__(self):
         return f"{self.family_head}'s Family"
 
     def get_church(self):
         return self.area.church
+
+    def save(self, *args, **kwargs):
+        if not self.position_no and not self.pk:  # Only for new families
+            self.position_no = self.get_next_position_number(self.area)
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_next_position_number(cls, area):
+        # Get the highest position number in this area
+        last_position = cls.objects.filter(
+            area=area
+        ).order_by('-position_no').first()
+        
+        if last_position and last_position.position_no:
+            return last_position.position_no + 1
+        return 1
 
     @classmethod
     def get_next_number(cls, area):

@@ -97,7 +97,7 @@
     <!-- Transactions Section -->
     <div class="card">
         <div class="card-header bg-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Transactions</h5>
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
@@ -112,6 +112,7 @@
                             <li><a class="dropdown-item" href="{% url 'accounts:custom_debit_add' pastorate_id=account.pastorate.id %}">Custom Debit</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:custom_credit_add' pastorate_id=account.pastorate.id %}">Custom Credit</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:contra_add' pastorate_id=account.pastorate.id %}">Contra Entry</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:intra_add' pastorate_id=account.pastorate.id %}">Intra Transfer</a></li>
                         {% else %}
                             <li><a class="dropdown-item" href="{% url 'accounts:receipt_add' pastorate_id=account.church.pastorate.id %}">Receipt</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:bill_add' pastorate_id=account.church.pastorate.id %}">Bill/Voucher</a></li>
@@ -120,10 +121,47 @@
                             <li><a class="dropdown-item" href="{% url 'accounts:custom_debit_add' pastorate_id=account.church.pastorate.id %}">Custom Debit</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:custom_credit_add' pastorate_id=account.church.pastorate.id %}">Custom Credit</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:contra_add' pastorate_id=account.church.pastorate.id %}">Contra Entry</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:intra_add' pastorate_id=account.church.pastorate.id %}">Intra Transfer</a></li>
                         {% endif %}
                     </ul>
                 </div>
             </div>
+
+            <!-- Filters -->
+            <form method="get" class="row g-3">
+                <div class="col-md-3">
+                    <input type="text" class="form-control" name="search" placeholder="Search..." value="{{ search_query }}">
+                </div>
+                <div class="col-md-2">
+                    <select class="form-select" name="type">
+                        <option value="">All Types</option>
+                        {% for type_code, type_name in transaction_types %}
+                        <option value="{{ type_code }}" {% if type_code == selected_type %}selected{% endif %}>{{ type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="primary_category">
+                        <option value="">All Primary Categories</option>
+                        {% for category in primary_categories %}
+                        <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_primary_category %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" name="secondary_category">
+                        <option value="">All Secondary Categories</option>
+                        {% for category in secondary_categories %}
+                        <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_secondary_category %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
         </div>
         <div class="card-body">
             {% if transactions %}
@@ -154,7 +192,39 @@
                                     {{ transaction.reference_number }}
                                 {% endif %}
                             </td>
-                            <td>{{ transaction.description|default:"-" }}</td>
+                            <td>
+                                {% if transaction.transaction_type == 'receipt' %}
+                                    {% if transaction.family_name %}
+                                        Receipt from {{ transaction.family_name }}
+                                        {% if transaction.member_name %}
+                                            ({{ transaction.member_name }})
+                                        {% endif %}
+                                    {% else %}
+                                        {{ transaction.description|default:"Receipt" }}
+                                    {% endif %}
+                                {% elif transaction.transaction_type == 'offering' %}
+                                    {% if transaction.church %}
+                                        Offering from {{ transaction.church.church_name }}
+                                    {% else %}
+                                        {{ transaction.description|default:"Church Offering" }}
+                                    {% endif %}
+                                {% elif transaction.transaction_type == 'contra' %}
+                                    Transfer to {{ transaction.to_account.name }}
+                                {% elif transaction.transaction_type == 'contra_credit' %}
+                                    Transfer from {{ transaction.from_account.name }}
+                                {% else %}
+                                    {{ transaction.description|default:"-" }}
+                                {% endif %}
+                                {% if transaction.primary_category %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ transaction.primary_category.name }}
+                                        {% if transaction.secondary_category %}
+                                            - {{ transaction.secondary_category.name }}
+                                        {% endif %}
+                                    </small>
+                                {% endif %}
+                            </td>
                             <td>
                                 {% if transaction.transaction_type == 'receipt' %}
                                     <span class="badge bg-success">Receipt</span>
@@ -172,10 +242,14 @@
                                     <span class="badge bg-danger">Contra Debit</span>
                                 {% elif transaction.transaction_type == 'contra_credit' %}
                                     <span class="badge bg-success">Contra Credit</span>
+                                {% elif transaction.transaction_type == 'intra' %}
+                                    <span class="badge bg-danger">Intra Debit</span>
+                                {% elif transaction.transaction_type == 'intra_credit' %}
+                                    <span class="badge bg-success">Intra Credit</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <span class="{% if transaction.transaction_type in 'receipt,offering,custom_credit,contra_credit' %}text-success{% else %}text-danger{% endif %}">
+                                <span class="{% if transaction.transaction_type in 'receipt,offering,custom_credit,contra_credit,intra_credit' %}text-success{% else %}text-danger{% endif %}">
                                     ₹ {{ transaction.amount }}
                                 </span>
                             </td>
@@ -240,4 +314,34 @@
     padding: 0.35rem 0.7rem;
 }
 </style>
+
+<script>
+// Add event listener to primary category select to filter secondary categories
+document.addEventListener('DOMContentLoaded', function() {
+    const primarySelect = document.querySelector('select[name="primary_category"]');
+    const secondarySelect = document.querySelector('select[name="secondary_category"]');
+    const secondaryOptions = Array.from(secondarySelect.options);
+
+    primarySelect.addEventListener('change', function() {
+        const selectedPrimary = this.value;
+        
+        // Reset secondary category select
+        secondarySelect.innerHTML = '<option value="">All Secondary Categories</option>';
+        
+        if (selectedPrimary) {
+            // Filter and add relevant secondary categories
+            secondaryOptions.forEach(option => {
+                if (!option.value || option.dataset.primaryId === selectedPrimary) {
+                    secondarySelect.add(option.cloneNode(true));
+                }
+            });
+        } else {
+            // If no primary category selected, show all secondary categories
+            secondaryOptions.forEach(option => {
+                secondarySelect.add(option.cloneNode(true));
+            });
+        }
+    });
+});
+</script>
 {% endblock %} 

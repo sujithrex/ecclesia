@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.db.models import Sum, Q
 from django.utils import timezone
 from datetime import datetime, timedelta
-from ..models import Account, AccountType, Transaction
+from ..models import Account, AccountType, Transaction, PrimaryCategory, SecondaryCategory
 
 @login_required
 def account_list(request):
@@ -14,6 +14,28 @@ def account_list(request):
 @login_required
 def account_detail(request, pk):
     account = get_object_or_404(Account, pk=pk)
+    
+    # Recalculate account balance on every page load
+    # Calculate credits
+    credits = Transaction.objects.filter(
+        account=account,
+        transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit', 'intra_credit']
+    ).aggregate(total=Sum('amount'))['total'] or 0
+    
+    # Calculate debits
+    debits = Transaction.objects.filter(
+        account=account,
+        transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra', 'intra']
+    ).aggregate(total=Sum('amount'))['total'] or 0
+    
+    # Update balance
+    account.balance = credits - debits
+    account.save()
+    
+    print(f"\n=== Auto-recalculated balance for {account.name} ===")
+    print(f"Credits: {credits}")
+    print(f"Debits: {debits}")
+    print(f"Current Balance: {account.balance}")
     
     # Get all transactions for this account
     transactions = Transaction.objects.select_related(
@@ -26,25 +48,57 @@ def account_detail(request, pk):
         'from_account',
         'from_account__church',
         'from_account__account_type',
+        'church',
+        'primary_category',
+        'secondary_category',
         'created_by'
     ).filter(
-        Q(account=account, transaction_type__in=['receipt', 'bill', 'aqudence', 'offering', 'custom_credit', 'custom_debit', 'contra']) |  # Regular transactions and outgoing contra
-        Q(account=account, transaction_type='contra_credit')  # Incoming contra
+        # For sending account: show regular transactions and outgoing transfers (debit entries)
+        (Q(account=account, transaction_type__in=['receipt', 'bill', 'aqudence', 'offering', 'custom_credit', 'custom_debit', 'contra']) |
+        # For sending account: show only outgoing intra transfers
+        Q(account=account, transaction_type='intra', to_account__isnull=False) |
+        # For receiving account: show only incoming transfers (credit entries)
+        Q(account=account, transaction_type__in=['contra_credit', 'intra_credit'], from_account__isnull=False))
     ).order_by('-date', '-created_at')
     
+    # Apply filters
+    search_query = request.GET.get('search', '')
+    if search_query:
+        transactions = transactions.filter(
+            Q(description__icontains=search_query) |
+            Q(receipt_number__icontains=search_query) |
+            Q(reference_number__icontains=search_query) |
+            Q(family_name__icontains=search_query) |
+            Q(member_name__icontains=search_query) |
+            Q(church__church_name__icontains=search_query)
+        )
+
+    # Category filters
+    primary_category_id = request.GET.get('primary_category')
+    secondary_category_id = request.GET.get('secondary_category')
+    if primary_category_id:
+        transactions = transactions.filter(primary_category_id=primary_category_id)
+    if secondary_category_id:
+        transactions = transactions.filter(secondary_category_id=secondary_category_id)
+
+    # Transaction type filter
+    transaction_type = request.GET.get('type')
+    if transaction_type:
+        transactions = transactions.filter(transaction_type=transaction_type)
+
     # Calculate monthly statistics
     today = timezone.now().date()
     start_of_month = today.replace(day=1)
     end_of_month = (start_of_month + timedelta(days=32)).replace(day=1) - timedelta(days=1)
     
-    # Regular credits (receipts, offerings, custom credits)
+    # Regular credits (money received)
     regular_credits = transactions.filter(
         account=account,
         transaction_type__in=['receipt', 'offering', 'custom_credit'],
         date__range=[start_of_month, end_of_month]
     ).aggregate(total=Sum('amount'))['total'] or 0
     
-    # Regular debits (bills, custom debits, aqudence)
+    # Regular debits (money spent)
     regular_debits = transactions.filter(
         account=account,
         transaction_type__in=['bill', 'custom_debit', 'aqudence'],
@@ -54,14 +108,14 @@ def account_detail(request, pk):
     # Contra debits (money sent)
     contra_debits = transactions.filter(
         account=account,
-        transaction_type='contra',
+        transaction_type__in=['contra', 'intra'],
         date__range=[start_of_month, end_of_month]
     ).aggregate(total=Sum('amount'))['total'] or 0
     
     # Contra credits (money received)
     contra_credits = transactions.filter(
         account=account,
-        transaction_type='contra_credit',
+        transaction_type__in=['contra_credit', 'intra_credit'],
         date__range=[start_of_month, end_of_month]
     ).aggregate(total=Sum('amount'))['total'] or 0
     
@@ -69,15 +123,6 @@ def account_detail(request, pk):
     total_credits = regular_credits + contra_credits
     total_debits = regular_debits + contra_debits
     net_change = total_credits - total_debits
-    
-    print(f"\nMonthly stats for {account.name}:")
-    print(f"Regular Credits: {regular_credits}")
-    print(f"Regular Debits: {regular_debits}")
-    print(f"Contra Credits: {contra_credits}")
-    print(f"Contra Debits: {contra_debits}")
-    print(f"Total Credits: {total_credits}")
-    print(f"Total Debits: {total_debits}")
-    print(f"Net Change: {net_change}")
     
     context = {
         'account': account,
@@ -92,7 +137,25 @@ def account_detail(request, pk):
             'net_change': net_change,
             'start_date': start_of_month,
             'end_date': end_of_month,
-        }
+        },
+        'search_query': search_query,
+        'selected_type': transaction_type,
+        'selected_primary_category': primary_category_id,
+        'selected_secondary_category': secondary_category_id,
+        'primary_categories': PrimaryCategory.objects.all(),
+        'secondary_categories': SecondaryCategory.objects.all(),
+        'transaction_types': [
+            ('receipt', 'Receipt'),
+            ('bill', 'Bill'),
+            ('aqudence', 'Aqudence'),
+            ('offering', 'Church Offering'),
+            ('custom_credit', 'Custom Credit'),
+            ('custom_debit', 'Custom Debit'),
+            ('contra', 'Contra Debit'),
+            ('contra_credit', 'Contra Credit'),
+            ('intra', 'Intra Debit'),
+            ('intra_credit', 'Intra Credit'),
+        ]
     }
     return render(request, 'accounts/account/detail.html', context)
 

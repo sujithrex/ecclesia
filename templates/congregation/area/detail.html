@@ -27,6 +27,9 @@
             <a href="{% url 'congregation:area_edit' pk=area.pk %}" class="btn btn-light">
                 <i class="fas fa-edit me-2"></i>Edit
             </a>
+            <a href="{% url 'congregation:area_position_edit' pk=area.pk %}" class="btn btn-light">
+                <i class="fas fa-sort me-2"></i>Edit Family Positions
+            </a>
             <a href="{% url 'congregation:area_delete' pk=area.pk %}" class="btn btn-danger">
                 <i class="fas fa-trash me-2"></i>Delete
             </a>

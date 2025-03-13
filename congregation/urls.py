@@ -24,6 +24,7 @@ urlpatterns = [
     path('area/<int:pk>/', views.area_detail, name='area_detail'),
     path('area/<int:pk>/edit/', views.area_edit, name='area_edit'),
     path('area/<int:pk>/delete/', views.area_delete, name='area_delete'),
+    path('area/<int:pk>/positions/', views.area_position_edit, name='area_position_edit'),
 
     # Fellowship URLs
     path('church/<int:church_id>/fellowship/', views.fellowship_list, name='fellowship_list'),

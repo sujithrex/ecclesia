@@ -267,7 +267,23 @@
                                     </div>
                                     <p class="text-muted mb-3">Transfer funds between accounts</p>
                                     <a href="{% url 'accounts:contra_add' pastorate.id %}" class="btn btn-primary">
-                                        <i class="fas fa-exchange-alt me-1"></i> Create Transfer
+                                        <i class="fas fa-plus me-1"></i> Create Entry
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card h-100 border-indigo">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <span class="badge bg-indigo mb-2">
+                                            <i class="fas fa-random"></i>
+                                        </span>
+                                        <h5 class="card-title">Intra Transfer</h5>
+                                    </div>
+                                    <p class="text-muted mb-3">Categorized fund transfers</p>
+                                    <a href="{% url 'accounts:intra_add' pastorate.id %}" class="btn btn-indigo">
+                                        <i class="fas fa-plus me-1"></i> Create Transfer
                                     </a>
                                 </div>
                             </div>

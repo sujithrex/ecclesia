@@ -187,7 +187,7 @@
                                 <tr>
                                     <td>{{ category.name }}</td>
                                     <td>
-                                        <span class="badge {% if category.transaction_type == 'credit' %}bg-success{% else %}bg-danger{% endif %}">
+                                        <span class="badge {% if category.transaction_type == 'credit' %}bg-success{% elif category.transaction_type == 'debit' %}bg-danger{% else %}bg-indigo{% endif %}">
                                             {{ category.get_transaction_type_display }}
                                         </span>
                                     </td>

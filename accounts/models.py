@@ -2,7 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from congregation.models import Pastorate, Church
 from django.utils import timezone
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 
@@ -63,7 +63,11 @@ class PrimaryCategory(models.Model):
     """Primary transaction categories like Income, Expense"""
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    transaction_type = models.CharField(max_length=10, choices=[('credit', 'Credit'), ('debit', 'Debit')])
+    transaction_type = models.CharField(max_length=10, choices=[
+        ('credit', 'Credit'), 
+        ('debit', 'Debit'),
+        ('contra', 'Contra')
+    ])
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -99,6 +103,8 @@ class Transaction(models.Model):
         ('custom_credit', 'Custom Credit'),
         ('contra', 'Contra Entry (Debit)'),
         ('contra_credit', 'Contra Entry (Credit)'),
+        ('intra', 'Intra Transfer (Debit)'),
+        ('intra_credit', 'Intra Transfer (Credit)'),
     ]
     
     account = models.ForeignKey(Account, on_delete=models.PROTECT, related_name='transactions')
@@ -252,47 +258,103 @@ def update_account_balances(sender, instance, created, **kwargs):
     account = instance.account
     account.balance = 0  # Reset balance
     
-    # Calculate credits (receipts, offerings, custom credits, contra credits)
+    # Calculate credits (receipts, offerings, custom credits, contra credits, intra credits)
     credits = Transaction.objects.filter(
         account=account,
-        transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit']
+        transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit', 'intra_credit']
     ).aggregate(total=models.Sum('amount'))['total'] or 0
     
-    # Calculate debits (bills, custom debits, aqudence, contra debits)
+    # Calculate debits (bills, custom debits, aqudence, contra debits, intra debits)
     debits = Transaction.objects.filter(
         account=account,
-        transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra']
+        transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra', 'intra']
     ).aggregate(total=models.Sum('amount'))['total'] or 0
     
     # Update balance
     account.balance = credits - debits
     print(f"\nUpdating balance for {account.name}:")
-    print(f"Credits (including contra credits): {credits}")
-    print(f"Debits (including contra debits): {debits}")
+    print(f"Credits (including contra/intra credits): {credits}")
+    print(f"Debits (including contra/intra debits): {debits}")
     print(f"Final Balance: {account.balance}")
     account.save()
     
-    # If this is a contra entry, also update the other account's balance
-    if instance.transaction_type == 'contra' and instance.to_account:
+    # If this is a contra/intra entry, also update the other account's balance
+    if instance.transaction_type in ['contra', 'intra'] and instance.to_account:
         to_account = instance.to_account
         to_account.balance = 0  # Reset balance
         
         # Calculate credits for receiving account
         to_credits = Transaction.objects.filter(
             account=to_account,
-            transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit']
+            transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit', 'intra_credit']
         ).aggregate(total=models.Sum('amount'))['total'] or 0
         
         # Calculate debits for receiving account
         to_debits = Transaction.objects.filter(
             account=to_account,
-            transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra']
+            transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra', 'intra']
         ).aggregate(total=models.Sum('amount'))['total'] or 0
         
         # Update receiving account balance
         to_account.balance = to_credits - to_debits
         print(f"\nUpdating balance for {to_account.name} (receiving account):")
-        print(f"Credits (including contra credits): {to_credits}")
-        print(f"Debits (including contra debits): {to_debits}")
+        print(f"Credits (including contra/intra credits): {to_credits}")
+        print(f"Debits (including contra/intra debits): {to_debits}")
         print(f"Final Balance: {to_account.balance}")
         to_account.save()
+
+@receiver(post_delete, sender=Transaction)
+def update_account_balances_on_delete(sender, instance, **kwargs):
+    """Update account balances when a transaction is deleted"""
+    print(f"\n=== Updating balances after deleting transaction {instance.id} ===")
+    
+    # Update primary account balance
+    account = instance.account
+    account.balance = 0  # Reset balance
+    
+    # Calculate credits
+    credits = Transaction.objects.filter(
+        account=account,
+        transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit', 'intra_credit']
+    ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    # Calculate debits
+    debits = Transaction.objects.filter(
+        account=account,
+        transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra', 'intra']
+    ).aggregate(total=models.Sum('amount'))['total'] or 0
+    
+    # Update balance
+    account.balance = credits - debits
+    print(f"\nUpdating balance for {account.name} after deletion:")
+    print(f"Credits: {credits}")
+    print(f"Debits: {debits}")
+    print(f"New Balance: {account.balance}")
+    account.save()
+    
+    # If this was a contra/intra entry, also update the other account's balance
+    if instance.transaction_type in ['contra', 'intra', 'contra_credit', 'intra_credit'] and instance.to_account:
+        to_account = instance.to_account
+        to_account.balance = 0  # Reset balance
+        
+        # Calculate credits for receiving account
+        to_credits = Transaction.objects.filter(
+            account=to_account,
+            transaction_type__in=['receipt', 'offering', 'custom_credit', 'contra_credit', 'intra_credit']
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        # Calculate debits for receiving account
+        to_debits = Transaction.objects.filter(
+            account=to_account,
+            transaction_type__in=['bill', 'custom_debit', 'aqudence', 'contra', 'intra']
+        ).aggregate(total=models.Sum('amount'))['total'] or 0
+        
+        # Update receiving account balance
+        to_account.balance = to_credits - to_debits
+        print(f"\nUpdating balance for {to_account.name} (receiving account) after deletion:")
+        print(f"Credits: {to_credits}")
+        print(f"Debits: {to_debits}")
+        print(f"New Balance: {to_account.balance}")
+        to_account.save()
+    
+    print("=== Balance updates complete ===\n")

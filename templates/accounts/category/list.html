@@ -37,8 +37,10 @@
                             <td>
                                 {% if category.transaction_type == 'credit' %}
                                 <span class="badge badge-success">Credit (Income)</span>
-                                {% else %}
+                                {% elif category.transaction_type == 'debit' %}
                                 <span class="badge badge-danger">Debit (Expense)</span>
+                                {% else %}
+                                <span class="badge badge-indigo">Contra (Transfer)</span>
                                 {% endif %}
                             </td>
                             <td>
@@ -88,8 +90,10 @@
                                 {{ category.primary_category.name }}
                                 {% if category.primary_category.transaction_type == 'credit' %}
                                 <span class="badge badge-success">Credit</span>
-                                {% else %}
+                                {% elif category.primary_category.transaction_type == 'debit' %}
                                 <span class="badge badge-danger">Debit</span>
+                                {% else %}
+                                <span class="badge badge-indigo">Contra</span>
                                 {% endif %}
                             </td>
                             <td>{{ category.description|default:"-" }}</td>
