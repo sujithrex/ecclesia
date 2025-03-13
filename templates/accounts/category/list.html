@@ -2,6 +2,11 @@
 
 {% block title %}Transaction Categories - Accounts{% endblock %}
 
+{% block extra_css %}
+<!-- Add DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'accounts:dashboard' %}">Accounts Dashboard</a></li>
@@ -20,7 +25,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered">
+                <table id="primaryCategoryTable" class="table table-bordered">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -73,7 +78,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-bordered">
+                <table id="secondaryCategoryTable" class="table table-bordered">
                     <thead>
                         <tr>
                             <th>Name</th>
@@ -117,4 +122,50 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables for Primary Categories
+        $('#primaryCategoryTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "info": true,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "language": {
+                "search": "Search: ",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "infoFiltered": "(filtered from _MAX_ total entries)"
+            },
+            "columnDefs": [
+                { "orderable": false, "targets": 3 } // Disable sorting on Actions column
+            ]
+        });
+
+        // Initialize DataTables for Secondary Categories
+        $('#secondaryCategoryTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "info": true,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "language": {
+                "search": "Search: ",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "infoFiltered": "(filtered from _MAX_ total entries)"
+            },
+            "columnDefs": [
+                { "orderable": false, "targets": 3 } // Disable sorting on Actions column
+            ]
+        });
+    });
+</script>
 {% endblock %} 

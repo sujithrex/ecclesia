@@ -2,6 +2,11 @@
 
 {% block title %}Essential Settings{% endblock %}
 
+{% block extra_css %}
+<!-- Add DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+{% endblock %}
+
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item active">Essential Settings</li>
@@ -22,37 +27,31 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    {% if respects %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Title</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for respect in respects %}
-                                <tr>
-                                    <td>{{ respect.name }}</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{% url 'congregation:respect_edit' pk=respect.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="{% url 'congregation:respect_delete' pk=respect.pk %}" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p class="text-muted mb-0">No respect titles found.</p>
-                    {% endif %}
+                    <table id="respectTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for respect in respects %}
+                            <tr>
+                                <td>{{ respect.name }}</td>
+                                <td>{{ respect.created_at|date:"d M Y" }}</td>
+                                <td>
+                                    <a href="{% url 'congregation:respect_edit' respect.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:respect_delete' respect.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -69,37 +68,31 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    {% if relations %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for relation in relations %}
-                                <tr>
-                                    <td>{{ relation.name }}</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{% url 'congregation:relation_edit' pk=relation.pk %}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <a href="{% url 'congregation:relation_delete' pk=relation.pk %}" class="btn btn-sm btn-outline-danger">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    {% else %}
-                    <p class="text-muted mb-0">No relations found.</p>
-                    {% endif %}
+                    <table id="relationTable" class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Relation</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for relation in relations %}
+                            <tr>
+                                <td>{{ relation.name }}</td>
+                                <td>{{ relation.created_at|date:"d M Y" }}</td>
+                                <td>
+                                    <a href="{% url 'congregation:relation_edit' relation.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'congregation:relation_delete' relation.id %}" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -172,7 +165,7 @@
                 <div class="card-body">
                     {% if categories %}
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle">
+                        <table id="categoryTable" class="table table-striped">
                             <thead>
                                 <tr>
                                     <th>Name</th>
@@ -201,6 +194,9 @@
                                     <td>{{ category.created_at|date:"M d, Y" }}</td>
                                     <td>
                                         <div class="btn-group">
+                                            <a href="{% url 'accounts:category_list' %}" class="btn btn-sm btn-outline-info me-1" title="View Subcategories">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
                                             <a href="{% url 'accounts:primary_category_edit' pk=category.id %}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-edit"></i>
                                             </a>
@@ -222,4 +218,56 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Add DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize DataTables
+        $('#respectTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "info": true,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "language": {
+                "search": "Search: ",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "infoFiltered": "(filtered from _MAX_ total entries)"
+            }
+        });
+
+        $('#relationTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "info": true,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "language": {
+                "search": "Search: ",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "infoFiltered": "(filtered from _MAX_ total entries)"
+            }
+        });
+        $('#categoryTable').DataTable({
+            "pageLength": 10,
+            "ordering": true,
+            "info": true,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "language": {
+                "search": "Search: ",
+                "lengthMenu": "Show _MENU_ entries",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "infoFiltered": "(filtered from _MAX_ total entries)"
+            }
+        });
+    });
+</script>
 {% endblock %} 
