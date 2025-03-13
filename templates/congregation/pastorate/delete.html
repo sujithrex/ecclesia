@@ -1,41 +1,91 @@
 {% extends 'base.html' %}
 
-{% block title %}Delete {{ pastorate.pastorate_name }} - Ecclesia{% endblock %}
+{% block title %}Delete Pastorate{% endblock %}
 
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_list' %}">Pastorates</a></li>
-<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pk=pastorate.pk %}">{{ pastorate.pastorate_name }}</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:pastorate_detail' pastorate.pk %}">{{ pastorate.pastorate_name }}</a></li>
 <li class="breadcrumb-item active">Delete</li>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card border-danger">
-                <div class="card-body text-center p-4">
-                    <div class="mb-4">
-                        <i class="fas fa-exclamation-triangle text-danger" style="font-size: 3rem;"></i>
-                    </div>
-                    <h3 class="card-title mb-3">Delete Pastorate</h3>
-                    <p class="text-muted mb-4">
-                        Are you sure you want to delete the pastorate "{{ pastorate.pastorate_name }}"?
-                        This action cannot be undone and will also delete all associated churches, areas, fellowships, families, and members.
-                    </p>
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="d-flex justify-content-center gap-2">
-                            <a href="{% url 'congregation:pastorate_detail' pk=pastorate.pk %}" class="btn btn-light">
-                                <i class="fas fa-times me-2"></i>Cancel
-                            </a>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-trash me-2"></i>Delete Pastorate
-                            </button>
-                        </div>
-                    </form>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Delete Pastorate</h6>
+        </div>
+        <div class="card-body">
+            {% if related_churches.exists or related_accounts.exists %}
+                <div class="alert alert-danger">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Cannot Delete Pastorate</h5>
+                    <p>This pastorate cannot be deleted because it has the following related records:</p>
+                    <ul class="mb-0">
+                        {% if related_churches.exists %}
+                        <li>
+                            <strong>Churches ({{ related_churches.count }}):</strong>
+                            <ul>
+                                {% for church in related_churches %}
+                                <li>{{ church.church_name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endif %}
+                        {% if related_accounts.exists %}
+                        <li>
+                            <strong>Accounts ({{ related_accounts.count }}):</strong>
+                            <ul>
+                                {% for account in related_accounts %}
+                                <li>{{ account.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    <hr>
+                    <p class="mb-0">You can either delete these records first or use the force delete option below.</p>
                 </div>
-            </div>
+
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Force Delete Option</h5>
+                    <p>Force delete will remove this pastorate and ALL related records including:</p>
+                    <ul>
+                        <li>All churches in this pastorate</li>
+                        <li>All areas in these churches</li>
+                        <li>All fellowships in these areas</li>
+                        <li>All families in these fellowships</li>
+                        <li>All members in these families</li>
+                        <li>All accounts associated with this pastorate</li>
+                    </ul>
+                    <p class="mb-0"><strong>Warning:</strong> This action cannot be undone!</p>
+                </div>
+
+                <form method="post" class="mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="force_delete" value="true">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you absolutely sure you want to force delete this pastorate and ALL its related records? This action CANNOT be undone!');">
+                        <i class="fas fa-bomb me-2"></i>Force Delete Everything
+                    </button>
+                    <a href="{% url 'congregation:pastorate_detail' pastorate.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </form>
+            {% else %}
+                <div class="alert alert-warning">
+                    <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Confirm Deletion</h5>
+                    <p>Are you sure you want to delete the pastorate "{{ pastorate.pastorate_name }}"?</p>
+                    <p class="mb-0">This action cannot be undone.</p>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Delete Pastorate
+                    </button>
+                    <a href="{% url 'congregation:pastorate_detail' pastorate.pk %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </a>
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>

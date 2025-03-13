@@ -142,11 +142,7 @@
                 </a>
                 <nav class="nav flex-column">
                     <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'web:dashboard' %}">
-                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                    </a>
-                    
-                    <a class="nav-link {% if request.path == '/accounts/dashboard/' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
-                        <i class="fas fa-chart-line me-2"></i>Accounts
+                        <i class="fas fa-tachometer-alt me-2"></i>Home
                     </a>
                     
                     <!-- Congregation Management Section -->
@@ -157,13 +153,23 @@
                         <i class="fas fa-church me-2"></i>Pastorates
                     </a>
 
+                    <!-- Accounts Section -->
+                    <div class="nav-section mt-3 mb-2">
+                        <small class="text-muted text-uppercase px-3">Accounts</small>
+                    </div>
+                    <a class="nav-link {% if request.path == '/accounts/dashboard/' %}active{% endif %}" href="{% url 'accounts:dashboard' %}">
+                        <i class="fas fa-chart-line me-2"></i>Overview
+                    </a>
                     
                     <!-- Settings Section -->
                     <div class="nav-section mt-3 mb-2">
                         <small class="text-muted text-uppercase px-3">Settings</small>
                     </div>
                     <a class="nav-link {% if '/congregation/settings/essentials/' in request.path %}active{% endif %}" href="{% url 'congregation:essentials' %}">
-                        <i class="fas fa-cog me-2"></i>Essentials
+                        <i class="fas fa-cog me-2"></i>Setup
+                    </a>
+                    <a class="nav-link {% if '/congregation/settings/backup-restore/' in request.path %}active{% endif %}" href="{% url 'congregation:backup_restore' %}">
+                        <i class="fas fa-database me-2"></i>Backup
                     </a>
 
                 </nav>

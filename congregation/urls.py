@@ -51,6 +51,12 @@ urlpatterns = [
 
     # Settings URLs
     path('settings/essentials/', views.essentials, name='essentials'),
+    path('settings/backup-restore/', views.backup_restore, name='backup_restore'),
+    path('settings/backup-restore/generate/', views.generate_backup, name='generate_backup'),
+    path('settings/backup-restore/validate/', views.validate_restore, name='validate_restore'),
+    path('settings/backup-restore/validation/', views.restore_validation, name='restore_validation'),
+    path('settings/backup-restore/perform/', views.perform_restore, name='perform_restore'),
+    path('settings/backup-restore/report/', views.restore_report, name='restore_report'),
     path('settings/respect/', views.respect_list, name='respect_list'),
     path('settings/respect/add/', views.respect_add, name='respect_add'),
     path('settings/respect/<int:pk>/edit/', views.respect_edit, name='respect_edit'),

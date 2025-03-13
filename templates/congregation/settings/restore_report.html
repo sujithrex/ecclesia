@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Restore Report - Settings{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:essentials' %}">Settings</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:backup_restore' %}">Backup & Restore</a></li>
+<li class="breadcrumb-item active">Restore Report</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Restore Report</h6>
+                    <div>
+                        <a href="{% url 'congregation:backup_restore' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Backup & Restore
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if report.stats.errors %}
+                    <div class="alert alert-warning mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Restore Completed with Warnings</h5>
+                        <p class="mb-0">The restore process completed, but some errors were encountered. See details below.</p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Restore Completed Successfully</h5>
+                        <p class="mb-0">All data has been restored successfully.</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold mb-3">Restore Statistics</h6>
+                        <div class="row">
+                            <!-- Pastorates -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card border-left-primary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                    Pastorates</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                    Created: {{ report.stats.created.pastorates }}<br>
+                                                    Updated: {{ report.stats.updated.pastorates }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-church fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Churches -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card border-left-success shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                    Churches</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                    Created: {{ report.stats.created.churches }}<br>
+                                                    Updated: {{ report.stats.updated.churches }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-place-of-worship fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Areas -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card border-left-info shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                    Areas</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                    Created: {{ report.stats.created.areas }}<br>
+                                                    Updated: {{ report.stats.updated.areas }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-map-marked-alt fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fellowships -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card border-left-warning shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                    Fellowships</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                    Created: {{ report.stats.created.fellowships }}<br>
+                                                    Updated: {{ report.stats.updated.fellowships }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-pray fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Families -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card border-left-danger shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">
+                                                    Families</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                    Created: {{ report.stats.created.families }}<br>
+                                                    Updated: {{ report.stats.updated.families }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-home fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Members -->
+                            <div class="col-md-4 mb-4">
+                                <div class="card border-left-secondary shadow h-100 py-2">
+                                    <div class="card-body">
+                                        <div class="row no-gutters align-items-center">
+                                            <div class="col mr-2">
+                                                <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">
+                                                    Members</div>
+                                                <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                                    Created: {{ report.stats.created.members }}<br>
+                                                    Updated: {{ report.stats.updated.members }}
+                                                </div>
+                                            </div>
+                                            <div class="col-auto">
+                                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if report.stats.errors %}
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold mb-3">Errors Encountered</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Member ID</th>
+                                        <th>Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for error in report.stats.errors %}
+                                    <tr>
+                                        <td>{{ error.row }}</td>
+                                        <td>{{ error.error }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="text-muted">
+                        <small>Restore completed at: {{ report.timestamp }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

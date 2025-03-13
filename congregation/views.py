@@ -1,14 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import JsonResponse
-from django.db import models
+from django.http import JsonResponse, HttpResponse
+from django.db import models, transaction
 from .models import Pastorate, Church, Area, Fellowship, Family, Respect, Relation, Member
 from django.db.models import Count, F, Q
-from datetime import date
+from datetime import date, datetime
 from django.core.paginator import Paginator
-from accounts.models import AccountType, PrimaryCategory
-from django.db import transaction
+from accounts.models import AccountType, PrimaryCategory, Account
+import csv
+import io
+from django.urls import reverse
+from django.core.files.uploadedfile import UploadedFile
 
 @login_required
 def pastorate_list(request):
@@ -57,13 +60,69 @@ def pastorate_edit(request, pk):
 @login_required
 def pastorate_delete(request, pk):
     pastorate = get_object_or_404(Pastorate, pk=pk)
+    
     if request.method == 'POST':
-        pastorate.delete()
-        messages.success(request, 'Pastorate deleted successfully.')
-        return redirect('congregation:pastorate_list')
-    return render(request, 'congregation/pastorate/delete.html', {
-        'pastorate': pastorate
-    })
+        try:
+            # Check if this is a force delete
+            if request.POST.get('force_delete') == 'true':
+                # Get all related records for deletion
+                related_churches = Church.objects.filter(pastorate=pastorate)
+                related_accounts = Account.objects.filter(pastorate=pastorate)
+                
+                # Use transaction to ensure all deletions succeed or none do
+                with transaction.atomic():
+                    # First delete all transactions
+                    from accounts.models import Transaction
+                    for church in related_churches:
+                        Transaction.objects.filter(church=church).delete()
+                        Transaction.objects.filter(account__church=church).delete()
+                    
+                    # Delete all transactions related to pastorate accounts
+                    for account in related_accounts:
+                        Transaction.objects.filter(account=account).delete()
+                        Transaction.objects.filter(to_account=account).delete()
+                    
+                    # Now delete the accounts
+                    for account in related_accounts:
+                        account.delete()
+                    
+                    # Finally delete churches (this will cascade delete areas, fellowships, families, and members)
+                    for church in related_churches:
+                        church.delete()
+                    
+                    # Delete the pastorate
+                    pastorate.delete()
+                
+                messages.success(request, f'Pastorate "{pastorate.pastorate_name}" and all its related records have been deleted.')
+                return redirect('congregation:pastorate_list')
+            else:
+                # Regular delete - check for related records
+                related_churches = Church.objects.filter(pastorate=pastorate)
+                related_accounts = Account.objects.filter(pastorate=pastorate)
+                
+                if related_churches.exists() or related_accounts.exists():
+                    error_message = "Cannot delete this pastorate because it has:"
+                    if related_churches.exists():
+                        error_message += f"\n- {related_churches.count()} connected churches"
+                    if related_accounts.exists():
+                        error_message += f"\n- {related_accounts.count()} connected accounts"
+                    error_message += "\n\nPlease delete or reassign these records before deleting the pastorate."
+                    messages.error(request, error_message)
+                else:
+                    pastorate.delete()
+                    messages.success(request, 'Pastorate deleted successfully.')
+                    return redirect('congregation:pastorate_list')
+        except Exception as e:
+            messages.error(request, f'An error occurred while deleting: {str(e)}')
+        return redirect('congregation:pastorate_detail', pk=pk)
+    
+    # Get counts of related records for the confirmation page
+    context = {
+        'pastorate': pastorate,
+        'related_churches': Church.objects.filter(pastorate=pastorate),
+        'related_accounts': Account.objects.filter(pastorate=pastorate),
+    }
+    return render(request, 'congregation/pastorate/delete.html', context)
 
 @login_required
 def church_list(request, pastorate_id):
@@ -917,3 +976,458 @@ def essentials(request):
         'categories': PrimaryCategory.objects.all().order_by('name'),
     }
     return render(request, 'congregation/settings/essentials.html', context)
+
+@login_required
+def backup_restore(request):
+    """View for database backup and restore operations"""
+    return render(request, 'congregation/settings/backup_restore.html')
+
+@login_required
+def generate_backup(request):
+    """Generate CSV backup of all members with their relationships"""
+    import csv
+    from django.http import HttpResponse
+    from datetime import datetime
+
+    # Create the HttpResponse object with CSV header
+    response = HttpResponse(content_type='text/csv')
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    response['Content-Disposition'] = f'attachment; filename="church_backup_{timestamp}.csv"'
+
+    writer = csv.writer(response, quoting=csv.QUOTE_ALL)
+    
+    # Write CSV Header
+    headers = [
+        'Pastorate Name', 'Pastorate Short Name',
+        'Church Name', 'Church Abode', 'Church Short Name',
+        'Area Name', 'Area ID',
+        'Fellowship Name', 'Fellowship ID', 'Fellowship Address',
+        'Family ID', 'Family Position No',
+        'Family Head Name', 'Family Respect', 'Family Initial',
+        'Family Mobile', 'Family Email', 'Family Address', 'Family Prayer Points',
+        'Member ID', 'Member Respect', 'Member Initial', 'Member Name',
+        'Member Relation', 'Sex', 'DOB', 'DOM', 'Working', 'Working Place',
+        'Baptised', 'Date of Baptism', 'Confirmed', 'Date of Confirmation',
+        'Death', 'Date of Death', 'Aadhar Number', 'Spouse Member ID'
+    ]
+    writer.writerow(headers)
+
+    # Get all members with related data
+    members = Member.objects.select_related(
+        'family',
+        'family__area',
+        'family__area__church',
+        'family__area__church__pastorate',
+        'family__fellowship',
+        'respect',
+        'relation',
+        'spouse'
+    ).all()
+
+    for member in members:
+        # Format dates to dd.mm.yyyy
+        dob = member.dob.strftime('%d.%m.%Y') if member.dob else ''
+        dom = member.dom.strftime('%d.%m.%Y') if member.dom else ''
+        date_of_bap = member.date_of_bap.strftime('%d.%m.%Y') if member.date_of_bap else ''
+        date_of_conf = member.date_of_conf.strftime('%d.%m.%Y') if member.date_of_conf else ''
+        date_of_death = member.date_of_death.strftime('%d.%m.%Y') if member.date_of_death else ''
+
+        # Create row data
+        row = [
+            member.family.area.church.pastorate.pastorate_name,
+            member.family.area.church.pastorate.pastorate_short_name,
+            member.family.area.church.church_name,
+            member.family.area.church.abode,
+            member.family.area.church.short_name,
+            member.family.area.area_name,
+            member.family.area.area_id,
+            member.family.fellowship.fellowship_name,
+            member.family.fellowship.fellowship_id,
+            member.family.fellowship.address,
+            member.family.family_id,
+            member.family.position_no or '',
+            member.family.family_head,
+            member.family.respect.name,
+            member.family.initial,
+            member.family.mobile,
+            member.family.email,
+            member.family.address,
+            member.family.prayer_points,
+            member.member_id,
+            member.respect.name,
+            member.initial,
+            member.name,
+            member.relation.name,
+            member.sex,
+            dob,
+            dom,
+            member.working,
+            member.working_place,
+            'Yes' if member.baptised else 'No',
+            date_of_bap,
+            'Yes' if member.conformed else 'No',
+            date_of_conf,
+            'Yes' if member.death else 'No',
+            date_of_death,
+            member.aadhar_number,
+            member.spouse.member_id if member.spouse else ''
+        ]
+        writer.writerow(row)
+
+    return response
+
+@login_required
+def validate_restore(request):
+    """Validate uploaded CSV file and show validation results"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST method is allowed'}, status=400)
+    
+    if 'csv_file' not in request.FILES:
+        return JsonResponse({'error': 'No file was uploaded'}, status=400)
+
+    try:
+        csv_file: UploadedFile = request.FILES['csv_file']
+        
+        # Validate file type
+        if not csv_file.name.endswith('.csv'):
+            return JsonResponse({'error': 'Invalid file type. Please upload a CSV file'}, status=400)
+        
+        # Read and decode the file
+        try:
+            file_content = csv_file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return JsonResponse({'error': 'Invalid file encoding. Please ensure the file is UTF-8 encoded'}, status=400)
+        
+        # Store the file in session
+        request.session['restore_file'] = file_content
+        
+        # Create CSV reader
+        csv_data = io.StringIO(file_content)
+        reader = csv.reader(csv_data)
+        
+        # Read headers
+        try:
+            headers = next(reader)
+        except StopIteration:
+            return JsonResponse({'error': 'The CSV file is empty'}, status=400)
+            
+        expected_headers = [
+            'Pastorate Name', 'Pastorate Short Name',
+            'Church Name', 'Church Abode', 'Church Short Name',
+            'Area Name', 'Area ID',
+            'Fellowship Name', 'Fellowship ID', 'Fellowship Address',
+            'Family ID', 'Family Position No',
+            'Family Head Name', 'Family Respect', 'Family Initial',
+            'Family Mobile', 'Family Email', 'Family Address', 'Family Prayer Points',
+            'Member ID', 'Member Respect', 'Member Initial', 'Member Name',
+            'Member Relation', 'Sex', 'DOB', 'DOM', 'Working', 'Working Place',
+            'Baptised', 'Date of Baptism', 'Confirmed', 'Date of Confirmation',
+            'Death', 'Date of Death', 'Aadhar Number', 'Spouse Member ID'
+        ]
+
+        format_errors = []
+        consistency_errors = []
+        
+        # Validate headers
+        if headers != expected_headers:
+            missing = set(expected_headers) - set(headers)
+            extra = set(headers) - set(expected_headers)
+            if missing:
+                format_errors.append({
+                    'line': 1,
+                    'column': '',
+                    'error': f'Missing columns: {", ".join(missing)}',
+                    'solution': 'Add the missing columns to your CSV file'
+                })
+            if extra:
+                format_errors.append({
+                    'line': 1,
+                    'column': '',
+                    'error': f'Extra columns found: {", ".join(extra)}',
+                    'solution': 'Remove the extra columns from your CSV file'
+                })
+
+        # Read all rows for validation
+        try:
+            rows = list(reader)
+        except csv.Error as e:
+            return JsonResponse({'error': f'Error reading CSV file: {str(e)}'}, status=400)
+        
+        if not rows:
+            return JsonResponse({'error': 'The CSV file contains no data rows'}, status=400)
+        
+        # Statistics
+        stats = {
+            'total_records': len(rows),
+            'members': len(rows),  # Each row is a member
+            'families': len(set(row[10] for row in rows)),  # Unique Family IDs
+            'fellowships': len(set(row[8] for row in rows)),  # Unique Fellowship IDs
+        }
+
+        # Store validation results in session
+        request.session['validation_results'] = {
+            'has_errors': bool(format_errors or consistency_errors),
+            'format_errors': format_errors,
+            'consistency_errors': consistency_errors,
+            'stats': stats,
+            'headers': headers,
+            'preview_data': rows[:5] if rows else []  # First 5 rows for preview
+        }
+
+        return JsonResponse({
+            'redirect_url': reverse('congregation:restore_validation')
+        })
+
+    except Exception as e:
+        import traceback
+        print('Error in validate_restore:', str(e))
+        print(traceback.format_exc())
+        return JsonResponse({
+            'error': f'Error processing file: {str(e)}'
+        }, status=400)
+
+@login_required
+def restore_validation(request):
+    """Show validation results page"""
+    # Get validation results from session
+    results = request.session.get('validation_results', {
+        'has_errors': True,
+        'format_errors': [{'line': 1, 'column': '', 'error': 'No file uploaded', 'solution': 'Upload a file'}],
+        'consistency_errors': [],
+        'stats': {'total_records': 0, 'members': 0, 'families': 0, 'fellowships': 0},
+        'headers': [],
+        'preview_data': []
+    })
+    
+    return render(request, 'congregation/settings/restore_validation.html', results)
+
+@login_required
+def perform_restore(request):
+    """Perform the actual restore operation"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+    # Get the stored file content from session
+    file_content = request.session.get('restore_file')
+    if not file_content:
+        return JsonResponse({'error': 'No file data found'}, status=400)
+
+    try:
+        # Create CSV reader
+        csv_data = io.StringIO(file_content)
+        reader = csv.reader(csv_data)
+        headers = next(reader)  # Skip header row
+        rows = list(reader)
+
+        # Dictionary to store restore statistics and track created/updated entities
+        stats = {
+            'created': {
+                'pastorates': 0,
+                'churches': 0,
+                'areas': 0,
+                'fellowships': 0,
+                'families': 0,
+                'members': 0,
+            },
+            'updated': {
+                'pastorates': 0,
+                'churches': 0,
+                'areas': 0,
+                'fellowships': 0,
+                'families': 0,
+                'members': 0,
+            },
+            'errors': []
+        }
+
+        # Dictionaries to track entities by their unique identifiers
+        pastorates = {}
+        churches = {}
+        areas = {}
+        fellowships = {}
+        families = {}
+        members = {}
+
+        # Process all rows within a transaction
+        with transaction.atomic():
+            # First pass: Create/update hierarchical entities
+            for row in rows:
+                try:
+                    # Extract data from row
+                    pastorate_data = {
+                        'pastorate_name': row[0],
+                        'pastorate_short_name': row[1],
+                        'user': request.user
+                    }
+                    church_data = {
+                        'church_name': row[2],
+                        'abode': row[3],
+                        'short_name': row[4]
+                    }
+                    area_data = {
+                        'area_name': row[5],
+                        'area_id': row[6]
+                    }
+                    fellowship_data = {
+                        'fellowship_name': row[7],
+                        'fellowship_id': row[8],
+                        'address': row[9]
+                    }
+                    family_data = {
+                        'family_id': row[10],
+                        'position_no': int(row[11]) if row[11].strip() else None,
+                        'family_head': row[12],
+                        'initial': row[14],
+                        'mobile': row[15],
+                        'email': row[16],
+                        'address': row[17],
+                        'prayer_points': row[18]
+                    }
+                    member_data = {
+                        'member_id': row[19],
+                        'initial': row[21],
+                        'name': row[22],
+                        'sex': row[24],
+                        'dob': datetime.strptime(row[25], '%d.%m.%Y').date() if row[25] else None,
+                        'dom': datetime.strptime(row[26], '%d.%m.%Y').date() if row[26] else None,
+                        'working': row[27],
+                        'working_place': row[28],
+                        'baptised': row[29] == 'Yes',
+                        'date_of_bap': datetime.strptime(row[30], '%d.%m.%Y').date() if row[30] else None,
+                        'conformed': row[31] == 'Yes',
+                        'date_of_conf': datetime.strptime(row[32], '%d.%m.%Y').date() if row[32] else None,
+                        'death': row[33] == 'Yes',
+                        'date_of_death': datetime.strptime(row[34], '%d.%m.%Y').date() if row[34] else None,
+                        'aadhar_number': row[35]
+                    }
+
+                    # Create or update Pastorate
+                    pastorate, pastorate_created = Pastorate.objects.update_or_create(
+                        pastorate_short_name=pastorate_data['pastorate_short_name'],
+                        defaults=pastorate_data
+                    )
+                    stats['created' if pastorate_created else 'updated']['pastorates'] += 1
+                    pastorates[pastorate_data['pastorate_short_name']] = pastorate
+
+                    # Create or update Church
+                    church, church_created = Church.objects.update_or_create(
+                        short_name=church_data['short_name'],
+                        pastorate=pastorate,
+                        defaults=church_data
+                    )
+                    stats['created' if church_created else 'updated']['churches'] += 1
+                    churches[church_data['short_name']] = church
+
+                    # Create or update Area
+                    area, area_created = Area.objects.update_or_create(
+                        area_id=area_data['area_id'],
+                        church=church,
+                        defaults=area_data
+                    )
+                    stats['created' if area_created else 'updated']['areas'] += 1
+                    areas[area_data['area_id']] = area
+
+                    # Create or update Fellowship
+                    fellowship, fellowship_created = Fellowship.objects.update_or_create(
+                        fellowship_id=fellowship_data['fellowship_id'],
+                        area=area,
+                        defaults=fellowship_data
+                    )
+                    stats['created' if fellowship_created else 'updated']['fellowships'] += 1
+                    fellowships[fellowship_data['fellowship_id']] = fellowship
+
+                    # Get or create Respect and Relation
+                    family_respect = Respect.objects.get_or_create(name=row[13])[0]
+                    member_respect = Respect.objects.get_or_create(name=row[20])[0]
+                    relation = Relation.objects.get_or_create(name=row[23])[0]
+
+                    # Create or update Family
+                    family, family_created = Family.objects.update_or_create(
+                        family_id=family_data['family_id'],
+                        defaults={
+                            **family_data,
+                            'area': area,
+                            'fellowship': fellowship,
+                            'respect': family_respect
+                        }
+                    )
+                    stats['created' if family_created else 'updated']['families'] += 1
+                    families[family_data['family_id']] = family
+
+                    # Create or update Member
+                    member, member_created = Member.objects.update_or_create(
+                        member_id=member_data['member_id'],
+                        defaults={
+                            **member_data,
+                            'family': family,
+                            'respect': member_respect,
+                            'relation': relation
+                        }
+                    )
+                    stats['created' if member_created else 'updated']['members'] += 1
+                    members[member_data['member_id']] = member
+
+                except Exception as e:
+                    stats['errors'].append({
+                        'row': row[19],  # Member ID as reference
+                        'error': str(e)
+                    })
+
+            # Second pass: Update spouse relationships
+            for row in rows:
+                member_id = row[19]
+                spouse_id = row[35]
+                
+                if spouse_id and member_id in members and spouse_id in members:
+                    member = members[member_id]
+                    spouse = members[spouse_id]
+                    
+                    # Update spouse relationship both ways
+                    member.spouse = spouse
+                    member.save()
+                    spouse.spouse = member
+                    spouse.save()
+
+        # Store restore report in session
+        request.session['restore_report'] = {
+            'stats': stats,
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        }
+
+        return JsonResponse({
+            'success': True,
+            'redirect_url': reverse('congregation:restore_report')
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        })
+
+@login_required
+def restore_report(request):
+    """Show restore operation report"""
+    report = request.session.get('restore_report', {
+        'stats': {
+            'created': {
+                'pastorates': 0,
+                'churches': 0,
+                'areas': 0,
+                'fellowships': 0,
+                'families': 0,
+                'members': 0,
+            },
+            'updated': {
+                'pastorates': 0,
+                'churches': 0,
+                'areas': 0,
+                'fellowships': 0,
+                'families': 0,
+                'members': 0,
+            },
+            'errors': []
+        },
+        'timestamp': None
+    })
+    return render(request, 'congregation/settings/restore_report.html', {'report': report})

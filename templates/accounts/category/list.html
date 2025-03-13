@@ -41,19 +41,19 @@
                             <td>{{ category.description|default:"-" }}</td>
                             <td>
                                 {% if category.transaction_type == 'credit' %}
-                                <span class="badge badge-success">Credit (Income)</span>
+                                <span class="badge bg-success">Credit (Income)</span>
                                 {% elif category.transaction_type == 'debit' %}
-                                <span class="badge badge-danger">Debit (Expense)</span>
+                                <span class="badge bg-danger">Debit (Expense)</span>
                                 {% else %}
-                                <span class="badge badge-indigo">Contra (Transfer)</span>
+                                <span class="badge bg-info">Contra (Transfer)</span>
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{% url 'accounts:primary_category_edit' category.id %}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
+                                <a href="{% url 'accounts:primary_category_edit' category.id %}" class="btn btn-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'accounts:primary_category_delete' category.id %}" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
+                                <a href="{% url 'accounts:primary_category_delete' category.id %}" class="btn btn-danger btn-sm" title="Delete">
+                                    <i class="fas fa-trash"></i>
                                 </a>
                             </td>
                         </tr>
@@ -94,20 +94,20 @@
                             <td>
                                 {{ category.primary_category.name }}
                                 {% if category.primary_category.transaction_type == 'credit' %}
-                                <span class="badge badge-success">Credit</span>
+                                <span class="badge bg-success">Credit</span>
                                 {% elif category.primary_category.transaction_type == 'debit' %}
-                                <span class="badge badge-danger">Debit</span>
+                                <span class="badge bg-danger">Debit</span>
                                 {% else %}
-                                <span class="badge badge-indigo">Contra</span>
+                                <span class="badge bg-info">Contra</span>
                                 {% endif %}
                             </td>
                             <td>{{ category.description|default:"-" }}</td>
                             <td>
-                                <a href="{% url 'accounts:secondary_category_edit' category.id %}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-edit"></i> Edit
+                                <a href="{% url 'accounts:secondary_category_edit' category.id %}" class="btn btn-primary btn-sm" title="Edit">
+                                    <i class="fas fa-edit"></i>
                                 </a>
-                                <a href="{% url 'accounts:secondary_category_delete' category.id %}" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash"></i> Delete
+                                <a href="{% url 'accounts:secondary_category_delete' category.id %}" class="btn btn-danger btn-sm" title="Delete">
+                                    <i class="fas fa-trash"></i>
                                 </a>
                             </td>
                         </tr>

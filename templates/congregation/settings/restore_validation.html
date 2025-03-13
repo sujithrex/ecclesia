@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Restore Validation - Settings{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:essentials' %}">Settings</a></li>
+<li class="breadcrumb-item"><a href="{% url 'congregation:backup_restore' %}">Backup & Restore</a></li>
+<li class="breadcrumb-item active">Validation Results</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Validation Results</h6>
+                    <div>
+                        {% if not has_errors %}
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#previewModal">
+                            <i class="fas fa-eye me-2"></i>Preview Data
+                        </button>
+                        <button type="button" class="btn btn-primary ms-2" id="startRestore">
+                            <i class="fas fa-upload me-2"></i>Start Restore
+                        </button>
+                        {% endif %}
+                        <a href="{% url 'congregation:backup_restore' %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-arrow-left me-2"></i>Back
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if has_errors %}
+                    <div class="alert alert-danger mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-exclamation-circle me-2"></i>Validation Failed</h5>
+                        <p>The following errors were found in your backup file. Please fix these issues and try again.</p>
+                    </div>
+                    
+                    <!-- Format Errors -->
+                    {% if format_errors %}
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">Format Errors</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Line</th>
+                                        <th>Column</th>
+                                        <th>Error</th>
+                                        <th>Solution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for error in format_errors %}
+                                    <tr>
+                                        <td>{{ error.line }}</td>
+                                        <td>{{ error.column }}</td>
+                                        <td>{{ error.error }}</td>
+                                        <td>{{ error.solution }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Data Consistency Errors -->
+                    {% if consistency_errors %}
+                    <div class="mb-4">
+                        <h6 class="font-weight-bold">Data Consistency Errors</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Details</th>
+                                        <th>Solution</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for error in consistency_errors %}
+                                    <tr>
+                                        <td>{{ error.type }}</td>
+                                        <td>{{ error.details }}</td>
+                                        <td>{{ error.solution }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% else %}
+                    <div class="alert alert-success mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Validation Successful</h5>
+                        <p class="mb-0">Your backup file has been validated successfully. You can now preview the data and proceed with the restore.</p>
+                    </div>
+
+                    <!-- Statistics -->
+                    <div class="row">
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-primary shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                                Total Records</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_records }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-database fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-success shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                                Members</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.members }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-info shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                                Families</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.families }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-home fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-4">
+                            <div class="card border-left-warning shadow h-100 py-2">
+                                <div class="card-body">
+                                    <div class="row no-gutters align-items-center">
+                                        <div class="col mr-2">
+                                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                                Fellowships</div>
+                                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.fellowships }}</div>
+                                        </div>
+                                        <div class="col-auto">
+                                            <i class="fas fa-pray fa-2x text-gray-300"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Data Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                {% for header in headers %}
+                                <th>{{ header }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in preview_data %}
+                            <tr>
+                                {% for cell in row %}
+                                <td>{{ cell }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted mt-3">Showing first 5 rows of data</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Progress Modal -->
+<div class="modal fade" id="restoreProgressModal" data-bs-backdrop="static" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Restoring Database</h5>
+            </div>
+            <div class="modal-body">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                </div>
+                <p id="restoreStatus" class="mb-0">Preparing to restore...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#startRestore').click(function() {
+        if (confirm('Are you sure you want to proceed with the restore? This operation cannot be undone.')) {
+            $('#restoreProgressModal').modal('show');
+            startRestore();
+        }
+    });
+
+    function startRestore() {
+        $.ajax({
+            url: '{% url "congregation:perform_restore" %}',
+            type: 'POST',
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            success: function(response) {
+                if (response.success) {
+                    window.location.href = response.redirect_url;
+                } else {
+                    alert('Restore failed: ' + response.error);
+                    $('#restoreProgressModal').modal('hide');
+                }
+            },
+            error: function() {
+                alert('An error occurred during restore.');
+                $('#restoreProgressModal').modal('hide');
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 
