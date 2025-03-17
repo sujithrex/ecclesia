@@ -33,6 +33,7 @@
             background-color: #f8f9fa;
             padding-top: 1rem;
             border-right: 1px solid #dee2e6;
+            transition: transform 0.3s ease;
         }
         .nav-link {
             color: #333;
@@ -128,12 +129,56 @@
             letter-spacing: 0.5px;
             color: #6c757d;
         }
+        
+        @media (max-width: 767.98px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 250px;
+                z-index: 1000;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.show {
+                transform: translateX(0);
+            }
+            
+            .sidebar-backdrop {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            
+            .sidebar-backdrop.show {
+                display: block;
+            }
+        }
+
+        .navbar-toggler {
+            padding: 0.5rem;
+            font-size: 1.25rem;
+            border: none;
+            color: var(--primary-color);
+        }
+
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
     {% if user.is_authenticated %}
     <div class="container-fluid">
         <div class="row">
+            <!-- Mobile Backdrop -->
+            <div class="sidebar-backdrop"></div>
+            
             <!-- Sidebar -->
             <div class="col-md-3 col-lg-2 sidebar">
                 <a href="{% url 'web:dashboard' %}" class="brand-logo">
@@ -161,6 +206,14 @@
                         <i class="fas fa-chart-line me-2"></i>Overview
                     </a>
                     
+                    <!-- Reports Section -->
+                    <div class="nav-section mt-3 mb-2">
+                        <small class="text-muted text-uppercase px-3">Reports</small>
+                    </div>
+                    <a class="nav-link {% if '/reports/essentials/' in request.path %}active{% endif %}" href="{% url 'reports:essentials' %}">
+                        <i class="fas fa-file-alt me-2"></i>Essentials
+                    </a>
+
                     <!-- Settings Section -->
                     <div class="nav-section mt-3 mb-2">
                         <small class="text-muted text-uppercase px-3">Settings</small>
@@ -179,13 +232,18 @@
             <div class="col-md-9 col-lg-10 ms-sm-auto px-4">
                 <!-- Top Bar -->
                 <div class="top-bar d-flex justify-content-between align-items-center mb-4">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-0">
-                            {% block breadcrumb %}
-                            <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
-                            {% endblock %}
-                        </ol>
-                    </nav>
+                    <div class="d-flex align-items-center">
+                        <button class="navbar-toggler d-md-none me-2" type="button">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                {% block breadcrumb %}
+                                <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+                                {% endblock %}
+                            </ol>
+                        </nav>
+                    </div>
                     <div class="dropdown">
                         <div class="user-dropdown d-flex align-items-center gap-2" data-bs-toggle="dropdown">
                             {% if user.profile_picture %}
@@ -238,5 +296,22 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chosen/1.8.7/chosen.jquery.min.js"></script>
     {% block extra_js %}{% endblock %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggler = document.querySelector('.navbar-toggler');
+            const sidebar = document.querySelector('.sidebar');
+            const backdrop = document.querySelector('.sidebar-backdrop');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('show');
+                backdrop.classList.toggle('show');
+            }
+
+            if (toggler && sidebar && backdrop) {
+                toggler.addEventListener('click', toggleSidebar);
+                backdrop.addEventListener('click', toggleSidebar);
+            }
+        });
+    </script>
 </body>
 </html> 

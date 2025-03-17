@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'web',
     'congregation',
     'accounts',
+    'reports',
 ]
 
 MIDDLEWARE = [

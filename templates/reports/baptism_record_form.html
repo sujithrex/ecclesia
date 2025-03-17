@@ -1,0 +1,478 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item"><a href="{% url 'reports:essentials' %}">Reports</a></li>
+<li class="breadcrumb-item active">Infant Baptism Record</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">{{ title }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if form.errors %}
+                    <div class="alert alert-danger">
+                        <h5>Please correct the errors below:</h5>
+                        {{ form.non_field_errors }}
+                        {% for field in form %}
+                            {% if field.errors %}
+                                <div class="mb-2">
+                                    <strong>{{ field.label }}:</strong>
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <!-- Basic Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">Basic Information</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.record_number.id_for_label }}" class="form-label">Record Number</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
+                                        {{ form.record_number }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.baptism_date.id_for_label }}" class="form-label">Baptism Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                        {{ form.baptism_date }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.birth_date.id_for_label }}" class="form-label">Birth Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
+                                        {{ form.birth_date }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user"></i></span>
+                                        {{ form.name }}
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        {{ form.name_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.name_is_tamil.id_for_label }}">
+                                            Contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-venus-mars"></i></span>
+                                        {{ form.gender }}
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        {{ form.gender_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.gender_is_tamil.id_for_label }}">
+                                            Contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.occupation.id_for_label }}" class="form-label">Occupation</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-briefcase"></i></span>
+                                        {{ form.occupation }}
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        {{ form.occupation_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.occupation_is_tamil.id_for_label }}">
+                                            Contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Parent Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">Parent Information</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.father_name.id_for_label }}" class="form-label">Father's Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-male"></i></span>
+                                        {{ form.father_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.mother_name.id_for_label }}" class="form-label">Mother's Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-female"></i></span>
+                                        {{ form.mother_name }}
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <div class="form-check">
+                                        {{ form.parents_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.parents_is_tamil.id_for_label }}">
+                                            Parent information contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Godparent Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">Godparent Information</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.godparent1_name.id_for_label }}" class="form-label">Godparent 1</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
+                                        {{ form.godparent1_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.godparent2_name.id_for_label }}" class="form-label">Godparent 2</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
+                                        {{ form.godparent2_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.godparent3_name.id_for_label }}" class="form-label">Godparent 3</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
+                                        {{ form.godparent3_name }}
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <div class="form-check">
+                                        {{ form.godparents_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.godparents_is_tamil.id_for_label }}">
+                                            Godparent information contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Church Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">Church Information</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.church_name.id_for_label }}" class="form-label">Church Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-church"></i></span>
+                                        {{ form.church_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.church_location.id_for_label }}" class="form-label">Church Location</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                        {{ form.church_location }}
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <div class="form-check">
+                                        {{ form.church_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.church_is_tamil.id_for_label }}">
+                                            Church information contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Minister Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">Minister Information</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.minister_name.id_for_label }}" class="form-label">Minister Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user-tie"></i></span>
+                                        {{ form.minister_name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.minister_title.id_for_label }}" class="form-label">Minister Title</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-tag"></i></span>
+                                        {{ form.minister_title }}
+                                    </div>
+                                </div>
+                                <div class="col-12 mt-2">
+                                    <div class="form-check">
+                                        {{ form.minister_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.minister_is_tamil.id_for_label }}">
+                                            Minister information contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Certification -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">Certification</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="{{ form.certifying_minister.id_for_label }}" class="form-label">Certifying Minister</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-signature"></i></span>
+                                        {{ form.certifying_minister }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.church_location_cert.id_for_label }}" class="form-label">Church Location (Cert)</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-map-pin"></i></span>
+                                        {{ form.church_location_cert }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="{{ form.certification_date.id_for_label }}" class="form-label">Certification Date</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-calendar-check"></i></span>
+                                        {{ form.certification_date }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-file-pdf me-2"></i>Generate PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    /* Form styling */
+    .form-control {
+        height: 45px;
+        border-radius: 0;
+        border-color: #ced4da;
+        font-size: 0.95rem;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(146, 45, 80, 0.15);
+    }
+    
+    .input-group-text {
+        background-color: #f8f9fa;
+        border-radius: 0;
+        border-right: none;
+        color: #6c757d;
+    }
+    
+    .input-group .form-control {
+        border-left: none;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Section styling */
+    .form-section {
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+        padding: 1.5rem;
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    
+    .form-section-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    /* Button styling */
+    .form-actions {
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .btn-primary {
+        padding: 0.6rem 2rem;
+        font-weight: 500;
+        border-radius: 0.25rem;
+    }
+    
+    /* Card styling */
+    .card {
+        border: none;
+        box-shadow: 0 0 15px rgba(0,0,0,0.05);
+        border-radius: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid #e9ecef;
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    /* Flatpickr customization */
+    .flatpickr-input {
+        background-color: #fff !important;
+    }
+    
+    .flatpickr-calendar {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 0.25rem;
+    }
+    
+    .flatpickr-day.selected {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .flatpickr-day.selected:hover {
+        background: var(--primary-dark);
+        border-color: var(--primary-dark);
+    }
+    
+    .flatpickr-day:hover {
+        background: rgba(146, 45, 80, 0.1);
+    }
+    
+    .flatpickr-day.today {
+        border-color: var(--primary-color);
+    }
+    
+    /* Select styling */
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        padding-right: 2.5rem;
+    }
+    
+    /* Tamil checkbox styling */
+    .form-check {
+        padding-left: 1.8rem;
+    }
+    
+    .form-check-input {
+        width: 1.2rem;
+        height: 1.2rem;
+        margin-top: 0.15rem;
+        margin-left: -1.8rem;
+        border: 1px solid #adb5bd;
+        cursor: pointer;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .form-check-label {
+        font-size: 0.9rem;
+        color: #6c757d;
+        cursor: pointer;
+    }
+    
+    .form-check-label:hover {
+        color: var(--primary-color);
+    }
+    
+    /* Tamil checkbox badge */
+    .tamil-badge {
+        display: inline-block;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        margin-left: 0.5rem;
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize date pickers
+        const dateFields = document.querySelectorAll('.datepicker');
+        dateFields.forEach(field => {
+            flatpickr(field, {
+                dateFormat: "d-m-Y",
+                allowInput: true,
+                altFormat: "d-m-Y",
+                theme: "light",
+                disableMobile: true,
+                locale: {
+                    firstDayOfWeek: 1
+                }
+            });
+        });
+        
+        // Add form-control class to all form inputs
+        document.querySelectorAll('form input, form select').forEach(input => {
+            input.classList.add('form-control');
+        });
+        
+        // Focus effect for input groups
+        const inputGroups = document.querySelectorAll('.input-group');
+        inputGroups.forEach(group => {
+            const input = group.querySelector('.form-control');
+            const inputGroupText = group.querySelector('.input-group-text');
+            
+            if (input && inputGroupText) {
+                input.addEventListener('focus', () => {
+                    inputGroupText.style.borderColor = 'var(--primary-color)';
+                });
+                
+                input.addEventListener('blur', () => {
+                    inputGroupText.style.borderColor = '#ced4da';
+                });
+            }
+        });
+    });
+</script>
+{% endblock %} 

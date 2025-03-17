@@ -104,10 +104,19 @@ class Command(BaseCommand):
             {'name': 'One Day Offertory', 'primary': 'Collections-Offerings'},
             {'name': 'Jews Offertory', 'primary': 'Collections-Offerings'},
             {'name': 'Vision Collection', 'primary': 'Collections-Offerings'},
+            {'name': 'Local Church Offerings', 'primary': 'Collections-Offerings'},
+            {'name': 'Light Offering', 'primary': 'Collections-Offerings'},
+            {'name': 'Cottage Prayer', 'primary': 'Collections-Offerings'},
+            {'name': 'Church Growth Offerings', 'primary': 'Collections-Offerings'},
+            {'name': 'Auction', 'primary': 'Collections-Offerings'},
+            {'name': 'Harvest Festival Offertory - Auction', 'primary': 'Collections-Offerings'},
+            {'name': 'Harvest Festival Offertory - Donation', 'primary': 'Collections-Offerings'},
+            {'name': 'Harvest Festival Offertory - Auction', 'primary': 'Collections-Offerings'},
             
             # Miscellaneous Income
             {'name': 'Miscellaneous Collection', 'primary': 'Miscellaneous Income'},
             {'name': 'Miscellaneous Income', 'primary': 'Miscellaneous Income'},
+            {'name': 'Miscellaneous Collections', 'primary': 'Miscellaneous Income'},
             {'name': 'Other Income', 'primary': 'Miscellaneous Income'},
             {'name': 'Others', 'primary': 'Miscellaneous Income'},
             
@@ -143,6 +152,9 @@ class Command(BaseCommand):
             # Rental Income
             {'name': 'Rent-Building & Land Rent', 'primary': 'Rental Income'},
             {'name': 'Rent Land', 'primary': 'Rental Income'},
+            {'name': 'Parish Hall / Multipurpose Hall', 'primary': 'Rental Income'},
+            {'name': 'Parish Hall / Multipurpose Hall EB', 'primary': 'Rental Income'},
+            {'name': 'Parish Hall / Multipurpose Hall Caution Deposite', 'primary': 'Rental Income'},
             
             # Revenue From Operation
             {'name': 'Donation-Receipt', 'primary': 'Revenue From Operation'},
