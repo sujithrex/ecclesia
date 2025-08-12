@@ -201,7 +201,81 @@ if %errorlevel% equ 0 (
 )
 
 echo.
-echo [8/8] Creating desktop shortcut...
+echo [8/10] Running initial data setup...
+echo ========================================================
+
+echo Setting up congregation data...
+
+:: Run congregation management commands
+echo Creating respect titles...
+python manage.py create_respect_titles
+
+if %errorlevel% neq 0 (
+    echo ⚠ Warning: Could not create respect titles automatically
+    echo   You may need to run this manually: python manage.py create_respect_titles
+) else (
+    echo ✓ Respect titles created successfully
+)
+
+echo Creating family relations...
+python manage.py create_relations
+
+if %errorlevel% neq 0 (
+    echo ⚠ Warning: Could not create family relations automatically
+    echo   You may need to run this manually: python manage.py create_relations
+) else (
+    echo ✓ Family relations created successfully
+)
+
+echo Setting up accounts data...
+
+:: Run accounts management commands
+echo Creating default account categories...
+python manage.py create_default_categories
+
+if %errorlevel% neq 0 (
+    echo ⚠ Warning: Could not create default categories automatically
+    echo   You may need to run this manually: python manage.py create_default_categories
+) else (
+    echo ✓ Default account categories created successfully
+)
+
+echo Creating income categories...
+python manage.py create_income_categories
+
+if %errorlevel% neq 0 (
+    echo ⚠ Warning: Could not create income categories automatically
+    echo   You may need to run this manually: python manage.py create_income_categories
+) else (
+    echo ✓ Income categories created successfully
+)
+
+echo Creating expense categories...
+python manage.py create_expense_categories
+
+if %errorlevel% neq 0 (
+    echo ⚠ Warning: Could not create expense categories automatically
+    echo   You may need to run this manually: python manage.py create_expense_categories
+) else (
+    echo ✓ Expense categories created successfully
+)
+
+echo.
+echo [9/10] Collecting static files...
+echo ========================================================
+
+echo Collecting static files...
+python manage.py collectstatic --noinput >nul 2>&1
+
+if %errorlevel% neq 0 (
+    echo ⚠ Warning: Could not collect static files
+    echo   This may affect styling but won't prevent the system from working
+) else (
+    echo ✓ Static files collected successfully
+)
+
+echo.
+echo [10/10] Creating desktop shortcut...
 echo ========================================================
 
 :: Create desktop shortcut using PowerShell
@@ -231,6 +305,9 @@ echo • Virtual environment at: %VENV_DIR%
 echo • All project dependencies
 echo • Database with migrations applied
 echo • Admin superuser account created
+echo • Congregation data (respect titles, family relations)
+echo • Accounts data (categories, income/expense types)
+echo • Static files collected
 echo • Desktop shortcut: %SHORTCUT_NAME%
 echo.
 echo ADMIN LOGIN CREDENTIALS:

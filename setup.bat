@@ -19,22 +19,24 @@ echo 2. Start Church Management System
 echo 3. Stop Server
 echo 4. Update Dependencies
 echo 5. Create/Reset Superuser (admin/admin)
-echo 6. Reset Installation (Clean reinstall)
-echo 7. View System Status
-echo 8. Open Project Folder
-echo 9. Exit
+echo 6. Run Initial Data Setup (All Management Commands)
+echo 7. Reset Installation (Clean reinstall)
+echo 8. View System Status
+echo 9. Open Project Folder
+echo 0. Exit
 echo.
-set /p "choice=Enter your choice (1-9): "
+set /p "choice=Enter your choice (0-9): "
 
 if "%choice%"=="1" goto :install
 if "%choice%"=="2" goto :start_system
 if "%choice%"=="3" goto :stop_server
 if "%choice%"=="4" goto :update_deps
 if "%choice%"=="5" goto :create_superuser
-if "%choice%"=="6" goto :reset_install
-if "%choice%"=="7" goto :system_status
-if "%choice%"=="8" goto :open_folder
-if "%choice%"=="9" goto :exit
+if "%choice%"=="6" goto :run_management_commands
+if "%choice%"=="7" goto :reset_install
+if "%choice%"=="8" goto :system_status
+if "%choice%"=="9" goto :open_folder
+if "%choice%"=="0" goto :exit
 goto :main_menu
 
 :install
@@ -113,11 +115,85 @@ if /i not "%confirm%"=="y" (
 
 echo Activating virtual environment...
 cd /d "%PROJECT_DIR%"
-call "%VENV_DIR%\Scripts\activate.bat"
+pushd "%VENV_DIR%\Scripts"
+call activate.bat
+popd
 
 echo Running superuser creation script...
 python create_superuser.py
 
+echo.
+echo Press any key to return to main menu...
+pause >nul
+goto :main_menu
+
+:run_management_commands
+cls
+echo.
+echo ========================================================
+echo    RUN INITIAL DATA SETUP
+echo ========================================================
+echo.
+
+set "PROJECT_DIR=%~dp0"
+set "VENV_DIR=%PROJECT_DIR%venv"
+
+if not exist "%VENV_DIR%" (
+    echo ✗ Virtual environment not found!
+    echo Please run installation first (Option 1).
+    echo.
+    echo Press any key to return to main menu...
+    pause >nul
+    goto :main_menu
+)
+
+echo This will run all management commands to set up initial data:
+echo • Respect titles (Mr., Mrs., Rev., etc.)
+echo • Family relations (Father, Mother, Son, etc.)
+echo • Account categories and types
+echo • Income and expense categories
+echo.
+set /p "confirm=Continue? (y/N): "
+
+if /i not "%confirm%"=="y" (
+    echo Operation cancelled.
+    echo.
+    echo Press any key to return to main menu...
+    pause >nul
+    goto :main_menu
+)
+
+echo Activating virtual environment...
+cd /d "%PROJECT_DIR%"
+pushd "%VENV_DIR%\Scripts"
+call activate.bat
+popd
+
+echo.
+echo Running congregation management commands...
+echo ==========================================
+
+echo Creating respect titles...
+python manage.py create_respect_titles
+
+echo Creating family relations...
+python manage.py create_relations
+
+echo.
+echo Running accounts management commands...
+echo =====================================
+
+echo Creating default account categories...
+python manage.py create_default_categories
+
+echo Creating income categories...
+python manage.py create_income_categories
+
+echo Creating expense categories...
+python manage.py create_expense_categories
+
+echo.
+echo ✓ All management commands completed!
 echo.
 echo Press any key to return to main menu...
 pause >nul
@@ -224,7 +300,9 @@ if exist "%VENV_DIR%" (
     echo ✓ Virtual environment exists
     
     :: Check Django installation
-    call "%VENV_DIR%\Scripts\activate.bat"
+    pushd "%VENV_DIR%\Scripts"
+    call activate.bat
+    popd
     python -c "import django; print('✓ Django installed:', django.get_version())" 2>nul
     if %errorlevel% neq 0 (
         echo ✗ Django not found in virtual environment

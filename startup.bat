@@ -17,8 +17,20 @@ echo Please wait while we prepare your application...
 :: Check if virtual environment exists
 if not exist "%VENV_DIR%" (
     echo.
-    echo ERROR: Virtual environment not found!
+    echo ERROR: Virtual environment not found at: %VENV_DIR%
     echo Please run installer.bat first to set up the system.
+    echo.
+    echo Press any key to close...
+    pause >nul
+    exit /b 1
+)
+
+:: Check if activate.bat exists
+if not exist "%VENV_DIR%\Scripts\activate.bat" (
+    echo.
+    echo ERROR: Virtual environment activation script not found!
+    echo Expected location: %VENV_DIR%\Scripts\activate.bat
+    echo Please run installer.bat to reinstall the system.
     echo.
     echo Press any key to close...
     pause >nul
@@ -29,11 +41,17 @@ if not exist "%VENV_DIR%" (
 cd /d "%PROJECT_DIR%"
 
 :: Activate virtual environment
-call "%VENV_DIR%\Scripts\activate.bat"
+echo Activating virtual environment...
+pushd "%VENV_DIR%\Scripts"
+call activate.bat
+popd
 
+:: Verify activation by checking if Python is available
+python --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo.
-    echo ERROR: Failed to activate virtual environment
+    echo ERROR: Failed to activate virtual environment or Python not found
+    echo Virtual environment path: %VENV_DIR%
     echo Please run installer.bat to reinstall the system.
     echo.
     echo Press any key to close...
