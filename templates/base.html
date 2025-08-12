@@ -213,6 +213,9 @@
                     <a class="nav-link {% if '/reports/essentials/' in request.path %}active{% endif %}" href="{% url 'reports:essentials' %}">
                         <i class="fas fa-file-alt me-2"></i>Essentials
                     </a>
+                    <a class="nav-link {% if '/reports/audit/' in request.path %}active{% endif %}" href="{% url 'reports:audit' %}">
+                        <i class="fas fa-rupee-sign me-2"></i>Audit
+                    </a>
 
                     <!-- Settings Section -->
                     <div class="nav-section mt-3 mb-2">

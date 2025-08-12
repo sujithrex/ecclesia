@@ -5,7 +5,7 @@
 {% block breadcrumb %}
 <li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
 <li class="breadcrumb-item"><a href="{% url 'reports:essentials' %}">Reports</a></li>
-<li class="breadcrumb-item active">Infant Baptism Record</li>
+<li class="breadcrumb-item active">Ripper Years Record</li>
 {% endblock %}
 
 {% block content %}
@@ -40,36 +40,50 @@
                             <h5 class="form-section-title">Basic Information</h5>
                             
                             <div class="row g-3">
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label for="{{ form.record_number.id_for_label }}" class="form-label">Record Number</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-hashtag"></i></span>
                                         {{ form.record_number }}
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label for="{{ form.baptism_date.id_for_label }}" class="form-label">Baptism Date</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
                                         {{ form.baptism_date }}
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="{{ form.birth_date.id_for_label }}" class="form-label">Birth Date</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
-                                        {{ form.birth_date }}
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                            </div>
+                        </div>
+                        
+                        <!-- Person Information -->
+                        <div class="form-section mb-4">
+                            <h5 class="form-section-title">Person Information</h5>
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.christian_name.id_for_label }}" class="form-label">Christian Name</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-user"></i></span>
-                                        {{ form.name }}
+                                        {{ form.christian_name }}
                                     </div>
                                     <div class="form-check mt-2">
-                                        {{ form.name_is_tamil }}
-                                        <label class="form-check-label" for="{{ form.name_is_tamil.id_for_label }}">
+                                        {{ form.christian_name_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.christian_name_is_tamil.id_for_label }}">
+                                            Contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.former_name.id_for_label }}" class="form-label">Former Name</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-user-tag"></i></span>
+                                        {{ form.former_name }}
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        {{ form.former_name_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.former_name_is_tamil.id_for_label }}">
                                             Contains Tamil text <span class="tamil-badge">தமிழ்</span>
                                         </label>
                                     </div>
@@ -87,8 +101,28 @@
                                         </label>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="{{ form.occupation.id_for_label }}" class="form-label">Occupation</label>
+                                <div class="col-md-2">
+                                    <label for="{{ form.age.id_for_label }}" class="form-label">Age</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-birthday-cake"></i></span>
+                                        {{ form.age }}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.abode.id_for_label }}" class="form-label">Abode/Residence</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-home"></i></span>
+                                        {{ form.abode }}
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        {{ form.abode_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.abode_is_tamil.id_for_label }}">
+                                            Contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.occupation.id_for_label }}" class="form-label">Trade/Profession</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-briefcase"></i></span>
                                         {{ form.occupation }}
@@ -139,21 +173,21 @@
                             
                             <div class="row g-3">
                                 <div class="col-md-4">
-                                    <label for="{{ form.godparent1_name.id_for_label }}" class="form-label">Godparent 1</label>
+                                    <label for="{{ form.godparent1_name.id_for_label }}" class="form-label">First Godparent</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
                                         {{ form.godparent1_name }}
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="{{ form.godparent2_name.id_for_label }}" class="form-label">Godparent 2</label>
+                                    <label for="{{ form.godparent2_name.id_for_label }}" class="form-label">Second Godparent</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
                                         {{ form.godparent2_name }}
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="{{ form.godparent3_name.id_for_label }}" class="form-label">Godparent 3</label>
+                                    <label for="{{ form.godparent3_name.id_for_label }}" class="form-label">Third Godparent</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-user-friends"></i></span>
                                         {{ form.godparent3_name }}
@@ -175,25 +209,16 @@
                             <h5 class="form-section-title">Church Information</h5>
                             
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="{{ form.church_name.id_for_label }}" class="form-label">Church Name</label>
+                                <div class="col-md-12">
+                                    <label for="{{ form.baptism_location.id_for_label }}" class="form-label">Where Baptized</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-church"></i></span>
-                                        {{ form.church_name }}
+                                        {{ form.baptism_location }}
                                     </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="{{ form.church_location.id_for_label }}" class="form-label">Church Location</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                                        {{ form.church_location }}
-                                    </div>
-                                </div>
-                                <div class="col-12 mt-2">
-                                    <div class="form-check">
-                                        {{ form.church_is_tamil }}
-                                        <label class="form-check-label" for="{{ form.church_is_tamil.id_for_label }}">
-                                            Church information contains Tamil text <span class="tamil-badge">தமிழ்</span>
+                                    <div class="form-check mt-2">
+                                        {{ form.baptism_location_is_tamil }}
+                                        <label class="form-check-label" for="{{ form.baptism_location_is_tamil.id_for_label }}">
+                                            Baptism location contains Tamil text <span class="tamil-badge">தமிழ்</span>
                                         </label>
                                     </div>
                                 </div>
@@ -261,10 +286,10 @@
                         
                         <div class="form-actions mt-4">
                             <div class="d-flex gap-3">
-                                <button type="submit" name="action" value="download" class="btn btn-primary">
+                                <button type="submit" name="action" value="download" class="btn btn-success">
                                     <i class="fas fa-download me-2"></i>Generate PDF
                                 </button>
-                                <button type="submit" name="action" value="view" class="btn btn-outline-primary">
+                                <button type="submit" name="action" value="view" class="btn btn-outline-success">
                                     <i class="fas fa-eye me-2"></i>View PDF
                                 </button>
                             </div>
@@ -334,13 +359,13 @@
         border-top: 1px solid #e9ecef;
     }
     
-    .btn-primary {
+    .btn-success {
         padding: 0.6rem 2rem;
         font-weight: 500;
         border-radius: 0.25rem;
     }
     
-    .btn-outline-primary {
+    .btn-outline-success {
         padding: 0.6rem 2rem;
         font-weight: 500;
         border-radius: 0.25rem;

@@ -1431,3 +1431,16 @@ def restore_report(request):
         'timestamp': None
     })
     return render(request, 'congregation/settings/restore_report.html', {'report': report})
+
+@login_required
+def get_churches_by_pastorate(request):
+    """API endpoint to get churches by pastorate ID"""
+    pastorate_id = request.GET.get('pastorate')
+    if not pastorate_id:
+        return JsonResponse({'error': 'Pastorate ID is required'}, status=400)
+    
+    try:
+        churches = Church.objects.filter(pastorate_id=pastorate_id).values('id', 'church_name')
+        return JsonResponse(list(churches), safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

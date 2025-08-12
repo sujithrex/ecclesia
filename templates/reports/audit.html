@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Financial Audit Reports{% endblock %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item"><a href="{% url 'web:dashboard' %}">Home</a></li>
+<li class="breadcrumb-item">Reports</li>
+<li class="breadcrumb-item active">Audit</li>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h4 class="card-title mb-0">Financial Audit Reports</h4>
+                    <p class="text-muted mb-0">Generate and view financial audit reports for your congregation</p>
+                </div>
+                <div class="card-body">
+                    <!-- Empty page as requested -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- No JavaScript needed for now -->
+{% endblock %} 

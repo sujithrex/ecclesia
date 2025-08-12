@@ -18,6 +18,9 @@ urlpatterns = [
     path('church/<int:pk>/edit/', views.church_edit, name='church_edit'),
     path('church/<int:pk>/delete/', views.church_delete, name='church_delete'),
 
+    # API endpoints
+    path('api/churches/', views.get_churches_by_pastorate, name='api_churches'),
+
     # Area URLs
     path('church/<int:church_id>/area/', views.area_list, name='area_list'),
     path('church/<int:church_id>/area/add/', views.area_add, name='area_add'),
