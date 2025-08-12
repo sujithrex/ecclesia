@@ -1,4 +1,4 @@
-# Church Management System - Windows Installation Guide
+# Ecclesia - Church Management System - Windows Installation Guide
 
 ## Quick Start
 
